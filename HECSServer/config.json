@@ -1,0 +1,35 @@
+{
+  "AuthorizationData": {
+    "SpeakerPasswords": [
+      "0846",
+      "ilovekefir",
+      "159753",
+      "8844"
+    ]
+  },
+  "ChannelData": {
+    "ChannelRadius": {
+      "0": 0.0,
+      "1": 3.5,
+      "2": 5.0,
+      "3": 5.25,
+      "4": 5.5,
+      "5": 5.75,
+      "6": 6.0
+    },
+    "ChannelChangeDistanceRatio": 0.5,
+    "AgoraEnabled": true
+  },
+  "RigidbodyData": {
+    "ConnectedClientDelaySeconds": 5.0,
+    "KeepOwnershipDistanceThreshold": 500.0,
+    "OwnershipChangeDelaySeconds": 1.0
+  },
+  "StatisticsData": {
+    "StatisticsEnabled": false,
+    "ExtendedStatisticsEnabled": false,
+    "StatisticsLoggingIntervalMilliseconds": 10000
+  },
+  "ServerTickMilliseconds": 80,
+  "DebugLogLevelEnabled": false
+}

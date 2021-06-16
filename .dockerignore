@@ -1,0 +1,12 @@
+.git/
+.gitignore
+.dockerignore
+*.yml
+docker-compose.*
+Dockerfile*
+Jenkinsfile*
+helm
+venv/
+logs/
+settings.py.py
+.pytest_cache/
