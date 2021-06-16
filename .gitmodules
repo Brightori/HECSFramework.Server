@@ -1,0 +1,6 @@
+[submodule "HECSServer/Core"]
+	path = HECSServer/Core
+	url = git@github.com:Brightori/HECSFrameworkCore.git
+[submodule "HECSServer/Serialize"]
+	path = HECSServer/Serialize
+	url = git@github.com:Brightori/HECSFrameworkSerialize.git
