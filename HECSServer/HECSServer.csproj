@@ -6,9 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="ServerShared\Core\**" />
-    <EmbeddedResource Remove="ServerShared\Core\**" />
-    <None Remove="ServerShared\Core\**" />
+    <Compile Remove="ServerShared\**" />
+    <EmbeddedResource Remove="ServerShared\**" />
+    <None Remove="ServerShared\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,10 +24,6 @@
   <ItemGroup>
     <None Remove="config.json" />
     <Content Include="config.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <None Remove="ServerShared\networkSaveData.json" />
-    <Content Include="ServerShared\networkSaveData.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
