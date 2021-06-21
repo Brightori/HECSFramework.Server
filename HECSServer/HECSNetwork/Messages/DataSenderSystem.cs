@@ -1,17 +1,14 @@
-﻿using Components;
-using HECSFrameWork;
-using HECSFrameWork.Components;
+﻿using HECSFramework.Core;
 using HECSServer.Core;
-using HECSServer.ServerShared;
 using LiteNetLib;
 using MessagePack;
 using System;
 
-namespace HECSServer.HECSNetwork
+namespace HECSFramework.Network
 {
-    public class HECSMessageSender : IHECSMessageSender
+    public class DataSenderSystem : BaseSystem,  IDataSenderSystem
     {
-        public static CommandMap CommandMap = new CommandMap();
+        private Connectionc
 
         public void SendCommandToAll<T>(T networkCommand, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableUnordered) where T : INetworkCommand
         {
@@ -46,11 +43,6 @@ namespace HECSServer.HECSNetwork
             peer.Send(Data(commandContainer), deliveryMethod);
             EntityManager.Command(new StatisticsCommand{Value = networkCommand.ToString(), StatisticsType = StatisticsType.CommandSent});
         }
-
-        public static byte[] Data(HECSNetMessage message)
-        {
-            return MessagePackSerializer.Serialize(message);
-        }
         
         public static void SendMessageToAllClients(string text)
         {
@@ -68,9 +60,14 @@ namespace HECSServer.HECSNetwork
                 kvp.Value.Send(packet, DeliveryMethod.ReliableOrdered);
             }
         }
+
+        public override void InitSystem()
+        {
+            throw new NotImplementedException();
+        }
     }
 
-    public interface IHECSMessageSender
+    public interface IDataSenderSystem
     {
         void SendCommandToAll<T>(T networkCommand, DeliveryMethod deliveryMethod = DeliveryMethod.ReliableUnordered) where T : INetworkCommand;
         void SendCommand<T>(Guid client, T networkCommand) where T : INetworkCommand;

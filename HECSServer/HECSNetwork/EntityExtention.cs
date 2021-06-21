@@ -1,7 +1,7 @@
 ﻿using Commands;
-using HECSFrameWork.Components;
+using HECSFramework.Core;
 
-namespace HECSFrameWork
+namespace HECSFramework.Network
 {
     public static class EntityExtention
     {

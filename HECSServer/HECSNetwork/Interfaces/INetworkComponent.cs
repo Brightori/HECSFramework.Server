@@ -1,20 +1,11 @@
-﻿using Components;
-using HECSFrameWork.Components;
-using MessagePack;
+﻿using HECSFramework.Core;
 
-namespace HECSServer.HECSNetwork
+namespace HECSFramework.Network
 {
-    [Union(1, typeof(TransformComponent))]
-    [Union(0, typeof(ActorContainerID))]
-    public interface INetworkComponent : IComponent, ISingleComponent
+    public interface INetworkComponent : IComponent 
     {
         int Version { get; set; }
         bool IsDirty { get; set; }
-    }
-
-    public interface IAfterSyncComponent : INetworkComponent
-    {
-        void AfterSync();
     }
 
     public interface ISyncToSelf { }

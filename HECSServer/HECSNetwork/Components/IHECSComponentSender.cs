@@ -1,12 +1,12 @@
-﻿using LiteNetLib;
+﻿using HECSFramework.Core;
+using LiteNetLib;
 using System;
-using System.Collections.Generic;
 
 namespace HECSServer.HECSNetwork
 {
-    public interface IHECSComponentSender
+    public interface IHECSSender
     {
-        void SyncSendComponentToAll(INetworkComponent networkComponent, Guid sender, DeliveryMethod deliveryMethod = DeliveryMethod.Unreliable);
-        void SyncSendComponent(NetPeer netPeer, Guid sender, INetworkComponent networkComponent, DeliveryMethod deliveryMethod = DeliveryMethod.Unreliable);
+        void SendToAll(ResolverDataContainer container, Guid sender, DeliveryMethod deliveryMethod = DeliveryMethod.Unreliable);
+        void SendToPeer(NetPeer netPeer, Guid sender, ResolverDataContainer container, DeliveryMethod deliveryMethod = DeliveryMethod.Unreliable);
     }
 }
