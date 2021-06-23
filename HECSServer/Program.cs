@@ -1,10 +1,10 @@
 ﻿using HECSFramework.Core;
 using HECSServer.Core;
-using HECSServer.CurrentGame;
 using System;
 using System.Threading;
+using Systems;
 
-namespace SocketUdpClient
+namespace HECSFramework.Server
 {
     class Program
     {
@@ -12,12 +12,12 @@ namespace SocketUdpClient
         
         static void Main(string[] args)
         {
-            Debug.Log("test");
             Config.Load();
             EntityManager entityManager = new EntityManager();
             EntityManager.ResolversMap.InitCommandResolvers();
 
-            var server = new HECSServer.Core.Server(8080, "FlashServer");
+            var server = new Server(8080, "FlashServer");
+            Debug.Log("Server start");
             
             while (true)
             {

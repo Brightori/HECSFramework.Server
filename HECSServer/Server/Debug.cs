@@ -1,13 +1,25 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using HECSServer.CurrentGame;
-using HECSServer.HECSNetwork;
-using SocketUdpClient;
+﻿using Commands;
+using HECSFramework.Core;
+using HECSFramework.Server;
+using System;
 
-namespace HECSServer.Core
+namespace Systems
 {
-    internal static class Debug
+    internal class Debug : BaseSystem, IAfterEntityInit
     {
+        private IDataSenderSystem dataSenderSystem;
+        private static Debug Instance;
+
+        public override void InitSystem()
+        {
+            Instance = this;
+        }
+
+        public void AfterEntityInit()
+        {
+            Owner.TryGetSystem(out dataSenderSystem);
+        }
+
         internal static void LogDebugFormat<T>(string format, T obj)
         {
             if (!Config.Instance.DebugLogLevelEnabled) return;
@@ -50,7 +62,7 @@ namespace HECSServer.Core
             var text = $"[WARN][{DateTime.Now:hh:mm:ss}][{Program.Tick}]: {msg}";
             Console.WriteLine(text);
             if (send)
-                HECSMessageSender.SendMessageToAllClients(text);
+                Instance.dataSenderSystem.SendCommandToAll(new TextMessageCommand { TextMessage = text }, Instance.Owner.GUID);
         }
         
         internal static void LogError(string msg, bool send = true)
@@ -58,7 +70,7 @@ namespace HECSServer.Core
             var text = $"[ERROR][{DateTime.Now:hh:mm:ss}][{Program.Tick}]: {msg}";
             Console.WriteLine(text);
             if (send)
-                HECSMessageSender.SendMessageToAllClients(text);
+                Instance.dataSenderSystem.SendCommandToAll(new TextMessageCommand { TextMessage = text }, Instance.Owner.GUID);
         }
     }
 }

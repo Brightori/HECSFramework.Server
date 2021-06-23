@@ -1,23 +1,23 @@
 using Commands;
-using HECSFrameWork.Systems;
-using HECSServer.CurrentGame;
+using Components;
+using HECSFramework.Core;
+using Systems;
 
-namespace HECSServer.Core
+namespace HECSFramework.Server
 {
     public class Server
     {
-        private readonly CurrentGameController gamesController;
         private readonly GlobalUpdateSystem globalUpdateSystem = new GlobalUpdateSystem();
         public static ulong ServerTime;
 
         public Server(int port, string key)
         {
-            globalUpdateSystem.Init();
-            globalUpdateSystem.Start();
-
-            gamesController = new CurrentGameController();
-            gamesController.Init();
+            var server = new Entity("Server");
+            server.AddHecsComponent(new ServerTagComponent());
+            server.AddHecsSystem(new ServerNetworkSystem());
+            server.AddHecsSystem(new Debug());
             
+            globalUpdateSystem.Start();
             EntityManager.Command(new InitNetworkSystemCommand { Port = port, Key = key });
         }
 

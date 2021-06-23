@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
-using HECSServer.Core;
-using Newtonsoft.Json;
+using Systems;
 
-namespace HECSServer.CurrentGame
+namespace HECSFramework.Server
 {
     [DataContract, Serializable]
     internal class Config
