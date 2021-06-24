@@ -6,11 +6,11 @@ using Systems;
 
 namespace HECSFramework.Server
 {
-    class Program
+    class StartServer
     {
         public static uint Tick = 0;
         
-        static void Main(string[] args)
+        internal static void Start(string[] args)
         {
             Config.Load();
             EntityManager entityManager = new EntityManager();

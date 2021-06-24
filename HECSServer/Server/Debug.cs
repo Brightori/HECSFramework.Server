@@ -51,15 +51,15 @@ namespace Systems
         {
             if (!Config.Instance.DebugLogLevelEnabled) return;
             
-            Console.WriteLine($"[DEBUG][{DateTime.Now:hh:mm:ss}][{Program.Tick}]: {msg}");
+            Console.WriteLine($"[DEBUG][{DateTime.Now:hh:mm:ss}][{StartServer.Tick}]: {msg}");
         }
 
         internal static void Log(object msg)
-            => Console.WriteLine($"[INFO][{DateTime.Now:hh:mm:ss}][{Program.Tick}]: {msg}");
+            => Console.WriteLine($"[INFO][{DateTime.Now:hh:mm:ss}][{StartServer.Tick}]: {msg}");
 
         internal static void LogWarning(string msg, bool send = true)
         {
-            var text = $"[WARN][{DateTime.Now:hh:mm:ss}][{Program.Tick}]: {msg}";
+            var text = $"[WARN][{DateTime.Now:hh:mm:ss}][{StartServer.Tick}]: {msg}";
             Console.WriteLine(text);
             if (send)
                 Instance.dataSenderSystem.SendCommandToAll(new TextMessageCommand { TextMessage = text }, Instance.Owner.GUID);
@@ -67,7 +67,7 @@ namespace Systems
         
         internal static void LogError(string msg, bool send = true)
         {
-            var text = $"[ERROR][{DateTime.Now:hh:mm:ss}][{Program.Tick}]: {msg}";
+            var text = $"[ERROR][{DateTime.Now:hh:mm:ss}][{StartServer.Tick}]: {msg}";
             Console.WriteLine(text);
             if (send)
                 Instance.dataSenderSystem.SendCommandToAll(new TextMessageCommand { TextMessage = text }, Instance.Owner.GUID);
