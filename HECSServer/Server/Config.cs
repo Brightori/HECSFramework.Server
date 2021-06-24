@@ -1,22 +1,18 @@
-﻿using Newtonsoft.Json;
+﻿using HECSFramework.Core.Generator;
+using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
 using Systems;
 
 namespace HECSFramework.Server
 {
     [DataContract, Serializable]
-    internal class Config
+    internal partial class Config
     {
-        [DataMember] public int ServerTickMilliseconds { get; private set; } = 50;
-        [DataMember] public StatisticsData StatisticsData { get; private set; }
-        [DataMember] public ChannelData ChannelData { get; private set; }
-        [DataMember] public AuthorizationData AuthorizationData { get; private set; }
-        [DataMember] public RigidbodyData RigidbodyData { get; private set; } 
-        [DataMember] public bool DebugLogLevelEnabled { get; private set; } 
+        [DataMember] public int ServerTickMilliseconds { get; private set; } = 80;
+        [DataMember] public string ServerName { get; private set; } = "HECSServer";
+        [DataMember] public string ServerPassword { get; private set; } = "ClausUmbrella";
         
         public static Config Instance => lazy.Value;
         private static Lazy<Config> lazy = new Lazy<Config>(() => new Config());
@@ -28,15 +24,34 @@ namespace HECSFramework.Server
         public static void Load()
         {
             var path = Path.Combine(AppContext.BaseDirectory, "config.json");
+            var path2 = Path.Combine(AppContext.BaseDirectory, "ProjectConfig.cs");
             if (!File.Exists(path))
             {
                 Debug.Log($"Config file not found at path: {path}.");
+                SaveToFile();
                 return;
+            }
+
+            if (!File.Exists(path2))
+            {
+                File.WriteAllText(path, GetProjectPart());
             }
             
             var text = File.ReadAllText(path);
             var loaded = JsonConvert.DeserializeObject<Config>(text);
             lazy = new Lazy<Config>(loaded);
+        }
+
+        private static string GetProjectPart()
+        {
+            var tree = new TreeSyntaxNode();
+            tree.Add(new NameSpaceSyntax("HECSFramework.Server"));
+            tree.Add(new LeftScopeSyntax());
+            tree.Add(new TabSimpleSyntax(1, "internal partial class Config"));
+            tree.Add(new LeftScopeSyntax(1));
+            tree.Add(new RightScopeSyntax(1));
+            tree.Add(new RightScopeSyntax());
+            return tree.ToString();
         }
 
         public static void SaveToFile()
@@ -45,50 +60,6 @@ namespace HECSFramework.Server
         }
     }
 
-    [DataContract, Serializable]
-    internal class ChannelData
-    {
-        [DataMember] private static readonly IReadOnlyDictionary<int, float> ChannelRadius =
-            new Dictionary<int, float>
-            {
-                {0, 0},
-                {1, 5},
-                {2, 6},
-                {3, 7},
-                {4, 8},
-                {5, 9}
-            };
-        
-        [DataMember] public bool AgoraEnabled { get; private set; } = true;
-
-        public float ConnectRadius(int usersCount)
-            => ChannelRadius.TryGetValue(usersCount, out float value) ? value : ChannelRadius.Last().Value;
-    }
-
-    [DataContract, Serializable]
-    internal class AuthorizationData
-    {
-        [DataMember] 
-        public IReadOnlyCollection<string> SpeakerPasswords { get; private set; } = new HashSet<string>
-        {
-            "0846",
-            "ilovekefir",
-            "159753",
-            "8844"
-        };
-    }
-    
-    [DataContract, Serializable]
-    internal class RigidbodyData
-    {
-        [DataMember]
-        public float KeepOwnershipDistanceThreshold { get; private set; }
-        [DataMember]
-        public float ConnectedClientDelaySeconds { get; private set; }
-        [DataMember]
-        public float OwnershipChangeDelaySeconds { get; private set; }
-    }
-    
     [DataContract, Serializable]
     internal class StatisticsData
     {

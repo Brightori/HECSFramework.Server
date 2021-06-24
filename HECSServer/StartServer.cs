@@ -16,7 +16,7 @@ namespace HECSFramework.Server
             EntityManager entityManager = new EntityManager();
             EntityManager.ResolversMap.InitCommandResolvers();
 
-            var server = new Server(8080, "FlashServer");
+            var server = new Server(8080, Config.Instance.ServerName);
             Debug.Log("Server start");
             
             while (true)
