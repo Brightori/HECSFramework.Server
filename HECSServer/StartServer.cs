@@ -1,5 +1,4 @@
 ﻿using HECSFramework.Core;
-using HECSServer.Core;
 using System;
 using System.Threading;
 using Systems;
@@ -14,7 +13,6 @@ namespace HECSFramework.Server
         {
             Config.Load();
             EntityManager entityManager = new EntityManager();
-            EntityManager.ResolversMap.InitCommandResolvers();
 
             var server = new Server(8080, Config.Instance.ServerName);
             Debug.Log("Server start");

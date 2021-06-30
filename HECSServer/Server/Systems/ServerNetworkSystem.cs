@@ -3,7 +3,6 @@ using Components;
 using HECSFramework.Core;
 using HECSFramework.Network;
 using HECSFramework.Server;
-using HECSServer.Core;
 using LiteNetLib;
 using MessagePack;
 using System;
@@ -19,7 +18,7 @@ namespace Systems
         private enum ServerNetworkSystemState { Default, Sync }
         private string connectionRequestKey = "Test";
 
-        private IConnectionsHolderComponent connections;
+        private ConnectionsHolderComponent connections;
         private IDataSenderSystem dataSenderSystem;
         private IDataProcessor dataProcessor = new HECSDataProcessor();
 
@@ -200,7 +199,7 @@ namespace Systems
                 connectionRequestKey = command.Key;
             }
 
-            connections = Owner.GetHECSComponent<IConnectionsHolderComponent>();
+            connections = Owner.GetHECSComponent<ConnectionsHolderComponent>();
             EventBasedNetListener listener = new EventBasedNetListener();
             connections.NetManager = new NetManager(listener);
             connections.NetManager.UpdateTime = Config.Instance.ServerTickMilliseconds;

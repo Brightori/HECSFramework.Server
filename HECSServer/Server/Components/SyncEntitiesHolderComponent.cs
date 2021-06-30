@@ -73,7 +73,7 @@ namespace Components
         {
             foreach (var kvp in SyncEnities)
             {
-                if (kvp.Value.TryGetHecsComponent(HMasks.WorldSliceIndexComponent, out IWorldSliceIndexComponent sliceIndex))
+                if (kvp.Value.TryGetHecsComponent(HMasks.WorldSliceIndexComponent, out WorldSliceIndexComponent sliceIndex))
                     sliceIndex.Index = CurrentIndex;
             }
         }
