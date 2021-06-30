@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization;
 using Systems;
 
@@ -13,6 +14,7 @@ namespace HECSFramework.Server
         [DataMember] public int ServerTickMilliseconds { get; private set; } = 80;
         [DataMember] public string ServerName { get; private set; } = "HECSServer";
         [DataMember] public string ServerPassword { get; private set; } = "ClausUmbrella";
+        [DataMember] public bool DebugLogLevelEnabled { get; private set; } = false;
         
         public static Config Instance => lazy.Value;
         private static Lazy<Config> lazy = new Lazy<Config>(() => new Config());
@@ -25,6 +27,7 @@ namespace HECSFramework.Server
         {
             var path = Path.Combine(AppContext.BaseDirectory, "config.json");
             var path2 = Path.Combine(AppContext.BaseDirectory, "ProjectConfig.cs");
+            
             if (!File.Exists(path))
             {
                 Debug.Log($"Config file not found at path: {path}.");
@@ -34,7 +37,7 @@ namespace HECSFramework.Server
 
             if (!File.Exists(path2))
             {
-                File.WriteAllText(path, GetProjectPart());
+                File.WriteAllText(path2, GetProjectPart());
             }
             
             var text = File.ReadAllText(path);
