@@ -4,9 +4,8 @@ using HECSFramework.Core;
 using HECSFramework.Server;
 using LiteNetLib;
 using System.Collections.Concurrent;
-using Systems;
 
-namespace HECSServer.Systems
+namespace Systems
 {
     internal class RegisterClientSystem : BaseSystem,
         IReactGlobalCommand<ClientConnectCommand>, IAfterEntityInit
