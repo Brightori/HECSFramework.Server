@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 
 namespace Components
 {
-    public class SyncEntitiesHolderComponent : BaseComponent, ISyncEntitiesHolderComponent
+    public class SyncEntitiesHolderComponent : BaseComponent 
     {
         /// <summary>
         /// не добавлять сюда данные напрямую, только через методы, отсюда только читаем актуальные данные
@@ -35,7 +35,7 @@ namespace Components
 
             var microSlice = new EntitiesOnIndex { AddEntity = entity.GUID };
 
-            if (entity.TryGetHecsComponent(HMasks.ClientIDHolderComponent, out IClientIDHolderComponent clientIDHolderComponent))
+            if (entity.TryGetHecsComponent(HMasks.ClientIDHolderComponent, out ClientIDHolderComponent clientIDHolderComponent))
             {
                 if (clientIDHolderComponent.Client.TryGetHecsComponent(HMasks.LocationComponent, out LocationComponent locationComponent))
                     microSlice.Location = locationComponent.LocationZone;
@@ -84,17 +84,5 @@ namespace Components
         public Guid AddEntity;
         public Guid RemoveEntity;
         public int Location;
-    }
-
-    public interface ISyncEntitiesHolderComponent : IComponent
-    {
-        ConcurrentDictionary<Guid, IEntity> SyncEnities { get; }
-        ConcurrentDictionary<Guid, int> EntityToSlice { get; }
-        ConcurrentDictionary<int, EntitiesOnIndex> DeltaSlice { get; }
-        int UpdateIndex();
-        int CurrentIndex { get; }
-        void AddEntity(IEntity entity);
-        void RemoveEntity(IEntity entity);
-        void RemoveEntity(Guid entity);
     }
 }

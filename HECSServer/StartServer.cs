@@ -14,7 +14,7 @@ namespace HECSFramework.Server
             Config.Load();
             EntityManager entityManager = new EntityManager();
 
-            var server = new Server(8080, Config.Instance.ServerName);
+            var server = new Server(8080, Config.Instance.ServerPassword);
             Debug.Log("Server start");
             
             while (true)

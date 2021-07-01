@@ -14,10 +14,13 @@ namespace HECSFramework.Server
         {
             var server = new Entity("Server");
             server.AddHecsComponent(new ServerTagComponent());
+            server.AddHecsComponent(new ConnectionsHolderComponent());
             server.AddHecsSystem(new ServerNetworkSystem());
             server.AddHecsSystem(new Debug());
+            server.Init();
             
             globalUpdateSystem.Start();
+
             EntityManager.Command(new InitNetworkSystemCommand { Port = port, Key = key });
         }
 

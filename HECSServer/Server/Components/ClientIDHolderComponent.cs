@@ -4,7 +4,7 @@ using System;
 
 namespace Components
 {
-    public class ClientIDHolderComponent : BaseComponent, IClientIDHolderComponent
+    public class ClientIDHolderComponent : BaseComponent
     {
         private NetPeer peerConnection = null;
         private IEntity client;
@@ -50,16 +50,5 @@ namespace Components
 
             return result;
         }
-    }
-}
-
-namespace Components
-{
-    public interface IClientIDHolderComponent : IComponent
-    {
-        Guid ClientID { get; set; }
-        IEntity Client { get; }
-        NetPeer GetPeer();
-        bool TryGetClientEntity(out IEntity entity);
     }
 }
