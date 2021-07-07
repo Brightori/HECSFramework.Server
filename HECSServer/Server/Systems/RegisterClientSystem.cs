@@ -15,6 +15,7 @@ namespace Systems
 
         public override void InitSystem()
         {
+            connectionsHolderComponent = Owner.GetHECSComponent<ConnectionsHolderComponent>();
             CheckWorldConnections(Owner.WorldId);
         }
 
@@ -51,9 +52,10 @@ namespace Systems
         private void SyncEntityLocation(ClientConnectCommand command)
         {
             var peer = connectionsHolderComponent.ClientConnectionsGUID[command.Client];
-            var location = Owner.GetLocationComponent().LocationZone;
-
-            EntityManager.Command(new SendWorldSliceToClientCommand { Peer = peer, LocationZone = location });
+            
+            //todo сюда определение на каком мире живет клиент
+            //var location = Owner.GetLocationComponent().LocationZone;
+            EntityManager.Command(new SendWorldSliceToClientCommand { Peer = peer, LocationZone = 0 });
         }
 
         private void CheckWorldConnections(int world)

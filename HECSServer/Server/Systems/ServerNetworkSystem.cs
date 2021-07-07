@@ -25,12 +25,16 @@ namespace Systems
         private ConcurrentDictionary<int, List<ResolverDataContainer>> pullResolvers = new ConcurrentDictionary<int, List<ResolverDataContainer>>();
         private bool[] lockedLists = new bool[64];
 
-
         private ServerNetworkSystemState state;
         public static object Lock = new ActorContainerID();
 
+        private int clientConnectCommandID = IndexGenerator.GetIndexForType(typeof(ClientConnectCommand));
+
+
         public override void InitSystem()
         {
+            connections = Owner.GetHECSComponent<ConnectionsHolderComponent>();
+
             for (int i = 0; i < lockedLists.Length; i++)
                 pullResolvers.TryAdd(i, new List<ResolverDataContainer>(256));
         }
@@ -62,9 +66,37 @@ namespace Systems
         {
             var bytes = netPacketReader.GetRemainingBytes();
             var message = MessagePackSerializer.Deserialize<ResolverDataContainer>(bytes);
-            dataProcessor.Process(message);
-        }
 
+            if (message.TypeHashCode == clientConnectCommandID)
+            {
+                var connect = MessagePack.MessagePackSerializer.Deserialize<ClientConnectCommand>(message.Data);
+                var id = peer.EndPoint.GetHashCode();
+                var clientGuid = connect.Client;
+
+                if (connections.ClientConnectionsID.ContainsKey(id))
+                {
+                    if (this.connections.TryGetClientByConnectionID(id, out var clientByID))
+                        this.connections.Owner.Command(new RemoveClientCommand { ClientGuidToRemove = clientByID });
+                }
+
+                connections.ClientConnectionsID.TryAdd(id, peer);
+                connections.ClientConnectionsGUID.TryAdd(clientGuid, peer);
+                connections.ClientConnectionsTimes.TryAdd(clientGuid, DateTime.Now);;
+
+                //todo подключить логи/статистику
+                //if (Config.Instance.StatisticsData.ExtendedStatisticsEnabled)
+                //    peer.NetManager.EnableStatistics = true;
+            }
+
+            try
+            {
+                dataProcessor.Process(message);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e.ToString());
+            }
+        }
 
         public void UpdateLocal()
         {
