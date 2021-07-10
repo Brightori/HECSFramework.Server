@@ -1,5 +1,6 @@
 ﻿using HECSFramework.Core;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using Systems;
 
@@ -16,7 +17,7 @@ namespace HECSFramework.Server
 
             var server = new Server(8080, Config.Instance.ServerPassword);
             Debug.Log("Server start");
-            
+
             while (true)
             {
                 try

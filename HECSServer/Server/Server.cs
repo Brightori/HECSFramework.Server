@@ -5,7 +5,10 @@ using Systems;
 
 namespace HECSFramework.Server
 {
-    public class Server
+    /// <summary>
+    /// если нам нужна проектозависимая история - добавляем парт часть, прописываем логику в методе парт
+    /// </summary>
+    public partial class Server
     {
         private readonly GlobalUpdateSystem globalUpdateSystem = new GlobalUpdateSystem();
         public static ulong ServerTime;
@@ -15,23 +18,31 @@ namespace HECSFramework.Server
             var server = new Entity("Server");
             server.AddHecsComponent(new ServerTagComponent());
             server.AddHecsComponent(new ConnectionsHolderComponent());
+            server.AddHecsComponent(new SyncEntitiesHolderComponent());
             
             server.AddHecsSystem(new DataSenderSystem());
             server.AddHecsSystem(new ServerNetworkSystem());
             server.AddHecsSystem(new RegisterClientSystem());
+            server.AddHecsSystem(new SyncEntitiesSystem());
+            server.AddHecsSystem(new RegisterClientEntitySystem());
             server.AddHecsSystem(new Debug());
             server.Init();
             
+            Start(server);
             globalUpdateSystem.Start();
-
             EntityManager.Command(new InitNetworkSystemCommand { Port = port, Key = key });
         }
+
+        partial void Start(IEntity server);
 
         public void Update()
         {
             ServerTime += (ulong)Config.Instance.ServerTickMilliseconds;
-            globalUpdateSystem.Update();
-            globalUpdateSystem.LateUpdate();
+            foreach (var w in EntityManager.Worlds)
+                w.GlobalUpdateSystem.Update();
+
+            foreach (var w in EntityManager.Worlds)
+                w.GlobalUpdateSystem.LateUpdate();
         }
     }
 }
