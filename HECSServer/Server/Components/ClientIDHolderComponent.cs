@@ -4,7 +4,7 @@ using System;
 
 namespace Components
 {
-    public class ClientIDHolderComponent : BaseComponent
+    public partial class ClientIDHolderComponent : BaseComponent
     {
         private NetPeer peerConnection = null;
         private IEntity client;
