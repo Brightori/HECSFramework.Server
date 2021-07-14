@@ -8,7 +8,6 @@ namespace Components
     {
         private NetPeer peerConnection = null;
         private IEntity client;
-        public Guid ClientID { get; set; }
         public IEntity Client
         {
             get
