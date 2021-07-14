@@ -5,7 +5,6 @@ using HECSFramework.Network;
 using HECSFramework.Server;
 using LiteNetLib;
 using System;
-using System.Threading.Tasks;
 
 namespace Systems
 {
@@ -70,7 +69,7 @@ namespace Systems
                         {
                             CharacterGuid = entity.Key,
                             ClientGuid = clients[i].GUID,
-                            Entity = MessagePack.MessagePackSerializer.Serialize(resolver),
+                            Entity = new EntityResolver().GetEntityResolver(entity.Value),
                             Index = entity.Value.WorldId,
                             IsNeedRecieveConfirm = false,
                         }, DeliveryMethod.Unreliable);
