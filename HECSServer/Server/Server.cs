@@ -23,8 +23,9 @@ namespace HECSFramework.Server
             server.AddHecsSystem(new DataSenderSystem());
             server.AddHecsSystem(new ServerNetworkSystem());
             server.AddHecsSystem(new RegisterClientSystem());
-            server.AddHecsSystem(new SyncEntitiesSystem());
             server.AddHecsSystem(new RegisterClientEntitySystem());
+            server.AddHecsSystem(new SyncEntitiesSystem());
+            server.AddHecsSystem(new AddOrRemoveComponentSystem());
             server.AddHecsSystem(new Debug());
             server.Init();
             

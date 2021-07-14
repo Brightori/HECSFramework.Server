@@ -11,7 +11,7 @@ namespace HECSFramework.Server
     [DataContract, Serializable]
     internal partial class Config
     {
-        [DataMember] public int ServerTickMilliseconds { get; private set; } = 80;
+        [DataMember] public int ServerTickMilliseconds { get; private set; } = 2000;
         [DataMember] public string ServerName { get; private set; } = "HECSServer";
         [DataMember] public string ServerPassword { get; private set; } = "ClausUmbrella";
         [DataMember] public bool DebugLogLevelEnabled { get; private set; } = false;

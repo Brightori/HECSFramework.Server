@@ -1,9 +1,6 @@
 ﻿using Commands;
 using Components;
 using HECSFramework.Core;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Systems
 {
@@ -17,6 +14,12 @@ namespace Systems
             entity.Init();
 
             Owner.GetSyncEntitiesHolderComponent().AddEntity(entity);
+
+            if (EntityManager.TryGetEntityByID(command.ClientGuid, out var client))
+            {
+                client.GetWorldSliceIndexComponent().EntitiesOnClient.Add(entity.GUID);
+            }
+
             Debug.Log($"получили спаун ентити {entity.GUID} от клиента {command.ClientGuid} ");
         }
 

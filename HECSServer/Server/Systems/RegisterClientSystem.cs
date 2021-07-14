@@ -7,11 +7,12 @@ using System.Collections.Concurrent;
 
 namespace Systems
 {
-    internal class RegisterClientSystem : BaseSystem,
-        IReactGlobalCommand<ClientConnectCommand>, IAfterEntityInit
+    internal class RegisterClientSystem : BaseSystem, IAfterEntityInit,
+        IReactGlobalCommand<ClientConnectCommand>, IReactCommand<RemoveClientCommand>
     {
         private ConnectionsHolderComponent connectionsHolderComponent;
         private IDataSenderSystem dataSenderSystem;
+        private ConcurrentQueue<IEntity> entitiesToRemove = new ConcurrentQueue<IEntity>();
 
         public override void InitSystem()
         {
@@ -36,6 +37,7 @@ namespace Systems
             var client = new Entity($"Client {command.Client}");
             client.SetGuid(command.Client);
             client.AddHecsComponent(new ClientTagComponent());
+            client.AddHecsComponent(new WorldSliceIndexComponent());
 
             client.Init(Owner.WorldId);
 
@@ -46,22 +48,40 @@ namespace Systems
             connectionsHolderComponent.WorldToPeerClients[Owner.WorldId].TryAdd(guidClientPeer.GetHashCode(), guidClientPeer);
             dataSenderSystem.SendCommand(connectionsHolderComponent.ClientConnectionsGUID[command.Client], SystemGuid, new ClientConnectSuccessCommand { ServerTickIntervalMilliseconds = Config.Instance.ServerTickMilliseconds });
 
-            SyncEntityLocation(command);
-        }
-
-        private void SyncEntityLocation(ClientConnectCommand command)
-        {
-            var peer = connectionsHolderComponent.ClientConnectionsGUID[command.Client];
-            
-            //todo сюда определение на каком мире живет клиент
-            //var location = Owner.GetLocationComponent().LocationZone;
-            EntityManager.Command(new SendWorldSliceToClientCommand { Peer = peer, LocationZone = 0 });
         }
 
         private void CheckWorldConnections(int world)
         {
             if (!connectionsHolderComponent.WorldToPeerClients.ContainsKey(world))
                 connectionsHolderComponent.WorldToPeerClients.TryAdd(world, new ConcurrentDictionary<int, NetPeer>());
+        }
+
+        public void CommandReact(RemoveClientCommand command)
+        {
+            var filter = EntityManager.Filter(HMasks.ClientIDHolderComponent);
+
+            foreach (var c in filter)
+            {
+                if (c.GetClientIDHolderComponent().ClientID == command.ClientGuidToRemove)
+                {
+                    entitiesToRemove.Enqueue(c);
+                }
+            }
+
+            while (entitiesToRemove.TryDequeue(out var entity))
+            {
+                entity.HecsDestroy();
+                connectionsHolderComponent.EntityToWorldConnections.TryRemove(entity.GUID, out var remove);
+            }
+
+            connectionsHolderComponent.ClientConnectionsGUID.TryRemove(command.ClientGuidToRemove, out var peer);
+            connectionsHolderComponent.ClientConnectionsTimes.TryRemove(command.ClientGuidToRemove, out var times);
+
+            if (EntityManager.TryGetEntityByID(command.ClientGuidToRemove, out var entityClient))
+            {
+                entityClient.HecsDestroy();
+                Debug.Log("удалили ентити с клиента " + entityClient.GUID);
+            }
         }
     }
 }
