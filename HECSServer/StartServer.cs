@@ -13,7 +13,7 @@ namespace HECSFramework.Server
         internal static void Start(string[] args)
         {
             Config.Load();
-            EntityManager entityManager = new EntityManager();
+            EntityManager entityManager = new EntityManager(16);
 
             var server = new Server(8080, Config.Instance.ServerPassword);
             Debug.Log("Server start");
