@@ -74,6 +74,13 @@ namespace Systems
                 var id = peer.EndPoint.GetHashCode();
                 var clientGuid = connect.Client;
 
+                if (connect.Version != applVersionComponent.Version)
+                {
+                    dataSenderSystem.SendCommand(peer, Guid.Empty, new DisconnectCommand { Reason = "Update your client to actual version" });
+                    peer.Disconnect();
+                    return;
+                }
+
                 if (connections.ClientConnectionsID.ContainsKey(id))
                 {
                     if (this.connections.TryGetClientByConnectionID(id, out var clientByID))
