@@ -19,6 +19,7 @@ namespace HECSFramework.Server
             server.AddHecsComponent(new ServerTagComponent());
             server.AddHecsComponent(new ConnectionsHolderComponent());
             server.AddHecsComponent(new SyncEntitiesHolderComponent());
+            server.AddHecsComponent(new ApplVersionComponent());
             
             server.AddHecsSystem(new DataSenderSystem());
             server.AddHecsSystem(new ServerNetworkSystem());

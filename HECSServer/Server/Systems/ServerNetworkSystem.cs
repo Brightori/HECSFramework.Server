@@ -29,10 +29,11 @@ namespace Systems
         public static object Lock = new ActorContainerID();
 
         private int clientConnectCommandID = IndexGenerator.GetIndexForType(typeof(ClientConnectCommand));
-
+        private ApplVersionComponent applVersionComponent;
 
         public override void InitSystem()
         {
+            Owner.TryGetHecsComponent(out applVersionComponent);
             connections = Owner.GetHECSComponent<ConnectionsHolderComponent>();
 
             for (int i = 0; i < lockedLists.Length; i++)
