@@ -29,7 +29,7 @@ namespace Systems
         public static object Lock = new ActorContainerID();
 
         private int clientConnectCommandID = IndexGenerator.GetIndexForType(typeof(ClientConnectCommand));
-        private ApplVersionComponent applVersionComponent;
+        private AppVersionComponent applVersionComponent;
 
         public override void InitSystem()
         {
