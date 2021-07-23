@@ -47,7 +47,7 @@ namespace Systems
 
             connectionsHolderComponent.WorldToPeerClients[Owner.WorldId].TryAdd(guidClientPeer.GetHashCode(), guidClientPeer);
             dataSenderSystem.SendCommand(connectionsHolderComponent.ClientConnectionsGUID[command.Client], SystemGuid, new ClientConnectSuccessCommand { ServerTickIntervalMilliseconds = Config.Instance.ServerTickMilliseconds });
-
+            Owner.Command(new NewClientOnServerCommand { Client = command.Client });
         }
 
         private void CheckWorldConnections(int world)
