@@ -2,63 +2,36 @@
 using Components;
 using HECSFramework.Core;
 using HECSFramework.Network;
-using System;
 
 namespace Systems
 {
-    public class AddOrRemoveComponentSystem : BaseSystem, 
-        IReactGlobalCommand<AddOrRemoveComponentToServerCommand>,
+    [Documentation("Network", "Server", "Эта система обрабатывает добавление сетевых компонентов, и добавляет их на клиента")]
+    public class AddOrRemoveComponentSystem : BaseSystem,
         IReactGlobalCommand<AddNetWorkComponentCommand>,
         IReactGlobalCommand<RemoveNetWorkComponentCommand>
     {
         private ConnectionsHolderComponent connectionsHolderComponent;
-        private IDataSenderSystem dataSenderSystem;
+        private DataSenderSystem dataSenderSystem;
 
         public override void InitSystem()
         {
-            Owner.TryGetHecsComponent(out connectionsHolderComponent);
-            Owner.TryGetSystem(out dataSenderSystem);
-        }
-
-        public void CommandGlobalReact(AddOrRemoveComponentToServerCommand command)
-        {
-            if (EntityManager.TryGetEntityByID(command.Entity, out var entity))
-            {
-                var component = EntityManager.ResolversMap.GetComponentFromContainer(command.component);
-
-                if (!TypesMap.GetComponentInfo(component.GetTypeHashCode, out var mask))
-                    return;
-
-                if (component == null)
-                    return;
-
-                if (command.IsAdded)
-                {
-                    entity.AddOrReplaceComponent(component);
-                }
-                else
-                    entity.RemoveHecsComponent(mask.ComponentsMask);
-
-
-                Debug.Log($"получили операцию по компоненту {command.IsAdded} {mask.ComponentName} для ентити {entity.GUID}  {entity.ID}");
-            }
+            dataSenderSystem = EntityManager.GetSingleSystem<DataSenderSystem>();
+            connectionsHolderComponent = EntityManager.GetSingleComponent<ConnectionsHolderComponent>();
         }
 
         public void CommandGlobalReact(AddNetWorkComponentCommand command)
         {
             var component = command.Component;
 
-            if (component is INetworkComponent networkComponent)
-{
-                foreach (var connect in connectionsHolderComponent.WorldToPeerClients[component.Owner.WorldId])
+            if (component is INetworkComponent networkComponent && networkComponent.IsAlive)
+            {
+                var commandToNetwork = new AddedComponentOnServerCommand
                 {
-                    dataSenderSystem.SendCommand(connect.Value, Guid.Empty, new AddOrRemoveComponentToServerCommand
-                    {
-                        component = EntityManager.ResolversMap.GetComponentContainer(component),
-                        Entity = component.Owner.GUID,
-                        IsAdded = true,
-                    });
-                }
+                    component = EntityManager.ResolversMap.GetComponentContainer(component),
+                    Entity = component.Owner.GUID,
+                };
+
+                dataSenderSystem.SendCommandToAllClients(commandToNetwork);
             }
         }
 
@@ -67,16 +40,14 @@ namespace Systems
             var component = command.Component;
 
             if (component is INetworkComponent networkComponent)
-{
-                foreach (var connect in connectionsHolderComponent.WorldToPeerClients[component.Owner.WorldId])
+            {
+                var removeCommand = new RemovedComponentOnServerCommand
                 {
-                    dataSenderSystem.SendCommand(connect.Value, Guid.Empty, new AddOrRemoveComponentToServerCommand
-                    {
-                        component = EntityManager.ResolversMap.GetComponentContainer(component),
-                        Entity = component.Owner.GUID,
-                        IsAdded = true,
-                    });
-                }
+                    Entity = component.Owner.GUID,
+                    TypeIndex = command.Component.GetTypeHashCode,
+                };
+
+                dataSenderSystem.SendCommandToAllClients(removeCommand);
             }
         }
     }

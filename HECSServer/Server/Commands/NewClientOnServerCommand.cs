@@ -3,8 +3,8 @@ using System;
 
 namespace Commands
 {
-    [Documentation("Client", "Эту команду мы отправляем после того как зарегестрировали клиента")]
-    public struct NewClientOnServerCommand : ICommand
+    [Documentation("Client", "Эту команду мы отправляем после того как получили нового клиента")]
+    public struct NewConnectionCommand : ICommand
     {
         public Guid Client;
     }

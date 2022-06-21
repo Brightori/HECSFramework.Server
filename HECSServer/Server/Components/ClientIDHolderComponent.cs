@@ -26,10 +26,8 @@ namespace Components
         {
             if (peerConnection != null)
                 return peerConnection;
-            
-            //todo заменить на актуальную маску
-            EntityManager.TryGetEntityByComponents(out var serverLogic, ref HMasks.Dummy);
-            peerConnection = serverLogic.GetHECSComponent<ConnectionsHolderComponent>().ClientConnectionsGUID[ClientID];
+
+            peerConnection = EntityManager.GetSingleComponent<ConnectionsHolderComponent>().ClientConnectionsGUID[ClientID];
             return peerConnection;
         }
 

@@ -1,12 +1,13 @@
 using Commands;
 using Components;
 using HECSFramework.Core;
+using HECSFramework.Network;
 using Systems;
 
 namespace HECSFramework.Server
 {
     /// <summary>
-    /// если нам нужна проектозависимая история - добавляем парт часть, прописываем логику в методе парт
+    /// РµСЃР»Рё РЅР°Рј РЅСѓР¶РЅР° РїСЂРѕРµРєС‚РѕР·Р°РІРёСЃРёРјР°СЏ РёСЃС‚РѕСЂРёСЏ - РґРѕР±Р°РІР»СЏРµРј РїР°СЂС‚ С‡Р°СЃС‚СЊ, РїСЂРѕРїРёСЃС‹РІР°РµРј Р»РѕРіРёРєСѓ РІ РјРµС‚РѕРґРµ РїР°СЂС‚
     /// </summary>
     public partial class Server
     {
@@ -16,23 +17,33 @@ namespace HECSFramework.Server
         public Server(int port, string key)
         {
             var server = new Entity("Server");
+            var dataSenderSys = new DataSenderSystem();
+
+            var networkStaff = new Entity("NetworkStaff");
+            networkStaff.AddHecsComponent(new ConnectionsHolderComponent());
+            networkStaff.AddHecsSystem(dataSenderSys);
+            networkStaff.Init();
+            
+            HECSDebug.Init(new HECSDebugServerSide(dataSenderSys, true));
+
             server.AddHecsComponent(new ServerTagComponent());
-            server.AddHecsComponent(new ConnectionsHolderComponent());
             server.AddHecsComponent(new SyncEntitiesHolderComponent());
             server.AddHecsComponent(new AppVersionComponent());
             
-            server.AddHecsSystem(new DataSenderSystem());
             server.AddHecsSystem(new ServerNetworkSystem());
             server.AddHecsSystem(new RegisterClientSystem());
             server.AddHecsSystem(new RegisterClientEntitySystem());
-            server.AddHecsSystem(new SyncEntitiesSystem());
             server.AddHecsSystem(new AddOrRemoveComponentSystem());
-            server.AddHecsSystem(new SyncComponentsServerSystem());
-            server.AddHecsSystem(new Debug());
             server.Init();
             
             Start(server);
-            globalUpdateSystem.Start();
+
+            foreach (var w in EntityManager.Worlds)
+            {
+                w.GlobalUpdateSystem.Start();
+                w.GlobalUpdateSystem.LateStart();
+            }
+            
             EntityManager.Command(new InitNetworkSystemCommand { Port = port, Key = key });
         }
 
@@ -42,10 +53,11 @@ namespace HECSFramework.Server
         {
             ServerTime += (ulong)Config.Instance.ServerTickMilliseconds;
             foreach (var w in EntityManager.Worlds)
+            {
                 w.GlobalUpdateSystem.Update();
-
-            foreach (var w in EntityManager.Worlds)
                 w.GlobalUpdateSystem.LateUpdate();
+                w.GlobalUpdateSystem.FinishUpdate?.Invoke();
+            }
         }
     }
 }

@@ -1,10 +1,9 @@
-﻿using HECSFramework.Core.Generator;
+﻿using HECSFramework.Core;
+using HECSFramework.Core.Generator;
 using Newtonsoft.Json;
 using System;
 using System.IO;
-using System.Reflection;
 using System.Runtime.Serialization;
-using Systems;
 
 namespace HECSFramework.Server
 {
@@ -15,7 +14,10 @@ namespace HECSFramework.Server
         [DataMember] public string ServerName { get; private set; } = "HECSServer";
         [DataMember] public string ServerPassword { get; private set; } = "ClausUmbrella";
         [DataMember] public bool DebugLogLevelEnabled { get; private set; } = false;
-        
+        [DataMember] public bool StatisticsEnabled { get; private set; } = false;
+        [DataMember] public bool ExtendedStatisticsEnabled { get; private set; } = false;
+        [DataMember] public int StatisticsLoggingIntervalMilliseconds { get; private set; } = 10000;
+
         public static Config Instance => lazy.Value;
         private static Lazy<Config> lazy = new Lazy<Config>(() => new Config());
 
@@ -30,7 +32,7 @@ namespace HECSFramework.Server
             
             if (!File.Exists(path))
             {
-                Debug.Log($"Config file not found at path: {path}.");
+                HECSDebug.Log($"Config file not found at path: {path}.");
                 SaveToFile();
                 return;
             }

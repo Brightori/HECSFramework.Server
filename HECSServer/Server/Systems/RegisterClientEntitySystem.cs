@@ -20,7 +20,7 @@ namespace Systems
                 client.GetWorldSliceIndexComponent().EntitiesOnClient.Add(entity.GUID);
             }
 
-            Debug.Log($"получили спаун ентити {entity.GUID} от клиента {command.ClientGuid} ");
+            HECSDebug.Log($"Spawn entity received {entity.GUID} from client {command.ClientGuid} ");
         }
 
         public override void InitSystem()

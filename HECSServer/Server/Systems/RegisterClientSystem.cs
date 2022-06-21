@@ -3,51 +3,41 @@ using Components;
 using HECSFramework.Core;
 using HECSFramework.Server;
 using LiteNetLib;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Concurrent;
 
 namespace Systems
 {
-    internal class RegisterClientSystem : BaseSystem, IAfterEntityInit,
-        IReactGlobalCommand<ClientConnectCommand>, IReactCommand<RemoveClientCommand>
+    internal class RegisterClientSystem : BaseSystem, IAfterEntityInit, IReactGlobalCommand<ClientConnectCommand>, IReactCommand<RemoveClientCommand> 
     {
         private ConnectionsHolderComponent connectionsHolderComponent;
-        private IDataSenderSystem dataSenderSystem;
+        private DataSenderSystem dataSenderSystem;
         private ConcurrentQueue<IEntity> entitiesToRemove = new ConcurrentQueue<IEntity>();
 
         public override void InitSystem()
         {
-            connectionsHolderComponent = Owner.GetHECSComponent<ConnectionsHolderComponent>();
+            connectionsHolderComponent = EntityManager.GetSingleComponent<ConnectionsHolderComponent>();
             CheckWorldConnections(Owner.WorldId);
         }
 
         public void AfterEntityInit()
         {
-            Owner.TryGetSystem(out dataSenderSystem);
+            dataSenderSystem = EntityManager.GetSingleSystem<DataSenderSystem>();
         }
 
         public void CommandGlobalReact(ClientConnectCommand command)
         {
             if (connectionsHolderComponent.EntityToWorldConnections.ContainsKey(command.Client))
             {
-                Debug.Log($"Прилетело новое подключение: {command.Client}. Такой клиент уже есть, игнорируем.");
+                HECSDebug.Log($"New connection: {command.Client}. Ignored: already having this guid.");
                 return;
             }
 
-            Debug.Log($"Прилетело новое подключение: {command.Client}.");
-            var client = new Entity($"Client {command.Client}");
-            client.SetGuid(command.Client);
-            client.AddHecsComponent(new ClientTagComponent());
-            client.AddHecsComponent(new WorldSliceIndexComponent());
-
-            client.Init(Owner.WorldId);
-
-            connectionsHolderComponent.EntityToWorldConnections.TryAdd(command.Client, Owner.WorldId);
-
-            var guidClientPeer = connectionsHolderComponent.ClientConnectionsGUID[command.Client];
-
-            connectionsHolderComponent.WorldToPeerClients[Owner.WorldId].TryAdd(guidClientPeer.GetHashCode(), guidClientPeer);
-            dataSenderSystem.SendCommand(connectionsHolderComponent.ClientConnectionsGUID[command.Client], SystemGuid, new ClientConnectSuccessCommand { ServerTickIntervalMilliseconds = Config.Instance.ServerTickMilliseconds });
-            Owner.Command(new NewClientOnServerCommand { Client = command.Client });
+            HECSDebug.Log($"New connection: {command.Client}.");
+            ServerData serverData = new ServerData{ServerTickIntervalMilliseconds = Config.Instance.ServerTickMilliseconds, ConfigData = JsonConvert.SerializeObject(Config.Instance, Formatting.Indented)};
+            dataSenderSystem.SendCommand(connectionsHolderComponent.ClientConnectionsGUID[command.Client], new ClientConnectSuccessCommand { ServerData = serverData });
+            Owner.Command(new NewConnectionCommand { Client = command.Client });
         }
 
         private void CheckWorldConnections(int world)
@@ -58,16 +48,17 @@ namespace Systems
 
         public void CommandReact(RemoveClientCommand command)
         {
-            var filter = EntityManager.Filter(HMasks.ClientIDHolderComponent);
+            if (!EntityManager.TryGetEntityByID(command.ClientGuidToRemove, out var entityClient))
+                return;
 
-            foreach (var c in filter)
+            foreach (var world in EntityManager.Worlds)
             {
-                if (c.GetClientIDHolderComponent().ClientID == command.ClientGuidToRemove)
-                {
-                    entitiesToRemove.Enqueue(c);
-                }
+                var filter = EntityManager.Filter(new FilterMask(HMasks.ClientIDHolderComponent), new FilterMask(HMasks.ServerEntityTagComponent), world.Index);
+                foreach (var c in filter)
+                    if (c.GetClientIDHolderComponent().ClientID == command.ClientGuidToRemove)
+                        entitiesToRemove.Enqueue(c);
             }
-
+            
             while (entitiesToRemove.TryDequeue(out var entity))
             {
                 entity.HecsDestroy();
@@ -76,12 +67,33 @@ namespace Systems
 
             connectionsHolderComponent.ClientConnectionsGUID.TryRemove(command.ClientGuidToRemove, out var peer);
             connectionsHolderComponent.ClientConnectionsTimes.TryRemove(command.ClientGuidToRemove, out var times);
+            
+            entityClient.HecsDestroy();
+            HECSDebug.Log($"Entity removed from client: {entityClient.GUID}");
+        }
 
-            if (EntityManager.TryGetEntityByID(command.ClientGuidToRemove, out var entityClient))
-            {
-                entityClient.HecsDestroy();
-                Debug.Log("удалили ентити с клиента " + entityClient.GUID);
-            }
+      
+
+      
+
+      
+
+      
+
+        private IEntity Register(Guid clientId)
+        { 
+            HECSDebug.LogDebug($"Registered client: {clientId}.", this);
+            var client = new Entity($"Client {clientId}");
+            client.SetGuid(clientId);
+            client.AddHecsComponent(new ClientTagComponent());
+            client.AddHecsComponent(new WorldSliceIndexComponent());
+            client.AddHecsComponent(new ClientIDHolderComponent {ClientID = client.GUID});
+
+            client.Init(Owner.WorldId);
+            connectionsHolderComponent.EntityToWorldConnections.TryAdd(clientId, Owner.WorldId);
+            var guidClientPeer = connectionsHolderComponent.ClientConnectionsGUID[clientId];
+            connectionsHolderComponent.WorldToPeerClients[Owner.WorldId].TryAdd(guidClientPeer.GetHashCode(), guidClientPeer);
+            return client;
         }
     }
 }

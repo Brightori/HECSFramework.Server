@@ -19,7 +19,7 @@ namespace Systems
         private string connectionRequestKey = "Test";
 
         private ConnectionsHolderComponent connections;
-        private IDataSenderSystem dataSenderSystem;
+        private DataSenderSystem dataSenderSystem;
         private IDataProcessor dataProcessor = new HECSDataProcessor();
 
         private ConcurrentDictionary<int, List<ResolverDataContainer>> pullResolvers = new ConcurrentDictionary<int, List<ResolverDataContainer>>();
@@ -68,42 +68,44 @@ namespace Systems
             var bytes = netPacketReader.GetRemainingBytes();
             var message = MessagePackSerializer.Deserialize<ResolverDataContainer>(bytes);
 
-            if (message.TypeHashCode == clientConnectCommandID)
-            {
-                var connect = MessagePack.MessagePackSerializer.Deserialize<ClientConnectCommand>(message.Data);
-                var id = peer.EndPoint.GetHashCode();
-                var clientGuid = connect.Client;
-
-                if (connect.Version != applVersionComponent.Version)
-                {
-                    dataSenderSystem.SendCommand(peer, Guid.Empty, new DisconnectCommand { Reason = "Update your client to actual version" });
-                    peer.Disconnect();
-                    return;
-                }
-
-                if (connections.ClientConnectionsID.ContainsKey(id))
-                {
-                    if (this.connections.TryGetClientByConnectionID(id, out var clientByID))
-                        this.connections.Owner.Command(new RemoveClientCommand { ClientGuidToRemove = clientByID });
-                }
-
-                connections.ClientConnectionsID.TryAdd(id, peer);
-                connections.ClientConnectionsGUID.TryAdd(clientGuid, peer);
-                connections.ClientConnectionsTimes.TryAdd(clientGuid, DateTime.Now);;
-
-                //todo подключить логи/статистику
-                //if (Config.Instance.StatisticsData.ExtendedStatisticsEnabled)
-                //    peer.NetManager.EnableStatistics = true;
-            }
+            CheckIfNewConnection(peer, message, out var invalidVersion);
+            if (invalidVersion) return;
 
             try
             {
                 dataProcessor.Process(message);
+                EntityManager.Command(new RawStatisticsCommand { ResolverDataContainer = message });
             }
             catch (Exception e)
             {
-                Debug.LogError(e.ToString());
+                HECSDebug.LogError(e.ToString());
             }
+        }
+
+        private void CheckIfNewConnection(NetPeer peer, ResolverDataContainer message, out bool invalidVersion)
+        {
+            invalidVersion = false;
+            if (message.TypeHashCode != clientConnectCommandID) return;
+
+            var connect = MessagePackSerializer.Deserialize<ClientConnectCommand>(message.Data);
+            var id = peer.EndPoint.GetHashCode();
+            var clientGuid = connect.Client;
+
+            invalidVersion = connect.Version != applVersionComponent.Version;
+            if (invalidVersion)
+            {
+                dataSenderSystem.SendCommand(peer, Guid.Empty, new DisconnectCommand { Reason = "Update your client to actual version" });
+                HECSDebug.Log($"Old client version detected: {connect.Version}. Rejecting...");
+                peer.Disconnect();
+                return;
+            }
+
+            if (connections.ClientConnectionsID.ContainsKey(id) && connections.TryGetClientByConnectionID(id, out var clientByID))
+                connections.Owner.Command(new RemoveClientCommand { ClientGuidToRemove = clientByID });
+
+            connections.ClientConnectionsID.TryAdd(id, peer);
+            connections.ClientConnectionsGUID.TryAdd(clientGuid, peer);
+            connections.ClientConnectionsTimes.TryAdd(clientGuid, DateTime.Now);
         }
 
         public void UpdateLocal()
@@ -117,7 +119,7 @@ namespace Systems
                     break;
             }
 
-            Owner.Command(new SyncComponentsCommand());
+            EntityManager.Command(new SyncComponentsCommand(), -1);
         }
        
         public void CommandGlobalReact(InitNetworkSystemCommand command)
@@ -127,12 +129,14 @@ namespace Systems
                 connectionRequestKey = command.Key;
             }
 
-            connections = Owner.GetHECSComponent<ConnectionsHolderComponent>();
+            connections = EntityManager.GetSingleComponent<ConnectionsHolderComponent>();
             EventBasedNetListener listener = new EventBasedNetListener();
             connections.NetManager = new NetManager(listener);
             connections.NetManager.UpdateTime = Config.Instance.ServerTickMilliseconds;
             connections.NetManager.DisconnectTimeout = 30000;
             connections.NetManager.ChannelsCount = 64;
+            if (Config.Instance.ExtendedStatisticsEnabled)
+                connections.NetManager.EnableStatistics = true;
             connections.NetManager.Start(command.Port);
 
             listener.NetworkReceiveEvent += Listener_NetworkReceiveEvent;
@@ -146,8 +150,8 @@ namespace Systems
 
         public void CommandGlobalReact(StopServerCommand command)
         {
-            Debug.Log("Received stop server command.");
-            foreach (var kvp in Owner.GetConnectionsHolderComponent().ClientConnectionsGUID)
+            HECSDebug.Log("Received stop server command.");
+            foreach (var kvp in EntityManager.GetSingleComponent<ConnectionsHolderComponent>().ClientConnectionsGUID)
                 kvp.Value.Disconnect();
             Environment.Exit(0);
         }

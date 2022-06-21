@@ -1,19 +1,18 @@
 ﻿using HECSFramework.Core;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Components
 {
     public class SyncEntitiesHolderComponent : BaseComponent 
     {
-        /// <summary>
-        /// не добавлять сюда данные напрямую, только через методы, отсюда только читаем актуальные данные
-        /// </summary>
-        public ConcurrentDictionary<Guid, IEntity> SyncEnities { get; } = new ConcurrentDictionary<Guid, IEntity>();
-        public ConcurrentDictionary<Guid, int> EntityToSlice { get; } = new ConcurrentDictionary<Guid, int>();
-        public ConcurrentDictionary<int, EntitiesOnIndex> DeltaSlice { get; } = new ConcurrentDictionary<int, EntitiesOnIndex>();
+        private ConcurrentDictionary<Guid, IEntity> syncEntities { get; } = new ConcurrentDictionary<Guid, IEntity>();
         private int currentIndex;
 
+        public ConcurrencyList<Guid> DefaultEntitiesOnLocation = new ConcurrencyList<Guid>();
+        public IReadOnlyDictionary<Guid, IEntity> SyncEntities => syncEntities;
+        
         public int CurrentIndex
         {
             get => currentIndex;
@@ -22,67 +21,33 @@ namespace Components
                 currentIndex = value;
                 if (currentIndex > 30000000)
                     currentIndex = 0;
-                UpdateEntitiesIndexes();
             }
         }
 
         public void AddEntity(IEntity entity)
         {
-            SyncEnities.TryAdd(entity.GUID, entity);
-
+            if (!syncEntities.TryAdd(entity.GUID, entity)) return;
+            
             entity.GetOrAddComponent<NetworkComponentsHolder>();
-
-
-            var microSlice = new EntitiesOnIndex { AddEntity = entity.GUID };
-
-            if (entity.TryGetHecsComponent(HMasks.ClientIDHolderComponent, out ClientIDHolderComponent clientIDHolderComponent))
-            {
-                if (clientIDHolderComponent.Client.TryGetHecsComponent(HMasks.LocationComponent, out LocationComponent locationComponent))
-                    microSlice.Location = locationComponent.LocationZone;
-            }
-
-            DeltaSlice.TryAdd(CurrentIndex, microSlice);
             CurrentIndex++;
+            UpdateEntitiesIndexes();
         }
 
         public void RemoveEntity(IEntity entity)
         {
-            if (SyncEnities.TryRemove(entity.GUID, out var entityResult))
-            {
-                DeltaSlice.TryAdd(CurrentIndex, new EntitiesOnIndex { RemoveEntity = entity.GUID });
-                CurrentIndex++;
-            }
-        }
+            if (!syncEntities.TryRemove(entity.GUID, out _)) return;
 
-        public void RemoveEntity(Guid entity)
-        {
-            if (SyncEnities.TryRemove(entity, out var entityResult))
-            {
-                DeltaSlice.TryAdd(CurrentIndex, new EntitiesOnIndex { RemoveEntity = entity });
-                CurrentIndex++;
-            }
+            CurrentIndex++;
+            UpdateEntitiesIndexes();
         }
-
-        public int UpdateIndex()
-        {
-            ++CurrentIndex;
-            return CurrentIndex;
-        }
-
+        
         private void UpdateEntitiesIndexes()
         {
-            foreach (var kvp in SyncEnities)
+            foreach (var kvp in syncEntities)
             {
                 if (kvp.Value.TryGetHecsComponent(HMasks.WorldSliceIndexComponent, out WorldSliceIndexComponent sliceIndex))
                     sliceIndex.Index = CurrentIndex;
             }
         }
-    }
-
-    public struct EntitiesOnIndex
-    {
-        public Guid AddEntity;
-        public Guid RemoveEntity;
-        public int Location;
     }
 }
