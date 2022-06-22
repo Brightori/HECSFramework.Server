@@ -128,14 +128,14 @@ namespace Systems
 
             for (int i = 0; i < currentCount; i++)
             {
-                if (!networkComponents[i].IsDirty || !networkComponents[i].IsAlive) continue;
+                if (!networkComponents.Data[i].IsDirty || !networkComponents.Data[i].IsAlive) continue;
 
-                ++networkComponents[i].Version;
+                ++networkComponents.Data[i].Version;
 
-                var deliveryMethod = networkComponents[i] is IUnreliable ? DeliveryMethod.Unreliable : DeliveryMethod.ReliableUnordered;
-                dataSenderSystem.SendComponentToFilteredClients(networkComponents[i], deliveryMethod, notReady);
+                var deliveryMethod = networkComponents.Data[i] is IUnreliable ? DeliveryMethod.Unreliable : DeliveryMethod.ReliableUnordered;
+                dataSenderSystem.SendComponentToFilteredClients(networkComponents.Data[i], deliveryMethod, notReady);
 
-                networkComponents[i].IsDirty = false;
+                networkComponents.Data[i].IsDirty = false;
             }
 
         }

@@ -86,11 +86,13 @@ namespace Systems
             connections.NetManager.Statistics.Reset();
         }
 
+        //todo тут изменеи
         private string GetQueuesData()
         {
-            var peers = connections.NetManager.ConnectedPeerList;
-            var channels = peers.SelectMany(a => a.Channels).Where(a => a != null).Distinct().Select(a => a.PacketsInQueue).OrderBy(a => a);
-            return $"Packets in channel queues: {string.Join(", ", channels)}";
+            //var peers = connections.NetManager.ConnectedPeerList;
+            //var channels = peers.SelectMany(a => a.).Where(a => a != null).Distinct().Select(a => a.PacketsInQueue).OrderBy(a => a);
+            //return $"Packets in channel queues: {string.Join(", ", channels)}";
+            return string.Empty;
         }
         
         public void CommandGlobalReact(RawStatisticsCommand command)

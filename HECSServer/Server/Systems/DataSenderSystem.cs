@@ -11,7 +11,7 @@ namespace Systems
             aliveConnections.Clear();
             foreach (var kvp in connectionsHolder.ClientConnectionsGUID)
             {
-                if (!EntityManager.TryGetEntityByID(kvp.Key, out var client) || !client.IsAlive || !client.GetClientTagComponent().IsReadyToSync) 
+                if (!EntityManager.TryGetEntityByID(kvp.Key, out var client) || !client.IsAlive()) 
                     continue;
 
                 aliveConnections.Add((kvp.Key, kvp.Value));

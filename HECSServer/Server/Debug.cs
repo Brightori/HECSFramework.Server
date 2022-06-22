@@ -7,7 +7,7 @@ namespace Systems
 {
     internal class Debug : BaseSystem, IAfterEntityInit
     {
-        private IDataSenderSystem dataSenderSystem;
+        private DataSenderSystem dataSenderSystem;
         private static Debug Instance;
 
         public override void InitSystem()
@@ -62,7 +62,7 @@ namespace Systems
             var text = $"[WARN][{DateTime.Now:hh:mm:ss}][{StartServer.Tick}]: {msg}";
             Console.WriteLine(text);
             if (send)
-                Instance.dataSenderSystem.SendCommandToAll(new TextMessageCommand { TextMessage = text }, Instance.Owner.GUID);
+                Instance.dataSenderSystem.SendCommandToAllClients(new TextMessageCommand { TextMessage = text }, Instance.Owner.GUID);
         }
         
         internal static void LogError(string msg, bool send = true)
@@ -70,7 +70,7 @@ namespace Systems
             var text = $"[ERROR][{DateTime.Now:hh:mm:ss}][{StartServer.Tick}]: {msg}";
             Console.WriteLine(text);
             if (send)
-                Instance.dataSenderSystem.SendCommandToAll(new TextMessageCommand { TextMessage = text }, Instance.Owner.GUID);
+                Instance.dataSenderSystem.SendCommandToAllClients(new TextMessageCommand { TextMessage = text }, Instance.Owner.GUID);
         }
     }
 }

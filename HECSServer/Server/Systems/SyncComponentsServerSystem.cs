@@ -8,14 +8,15 @@ namespace Systems
     public class SyncComponentsServerSystem : BaseSystem, IReactComponent, IReactEntity
     {
         private ConcurrencyList<INetworkComponent> networkComponents = new ConcurrencyList<INetworkComponent>();
-        private IDataSenderSystem dataSenderSystem;
+        private DataSenderSystem dataSenderSystem;
+        private HECSMask networkEntityTagComponentMask = HMasks.GetMask<NetworkEntityTagComponent>();
 
         public Guid ListenerGuid { get; }
 
         public override void InitSystem()
         {
             Owner.TryGetSystem(out dataSenderSystem);
-            var networkEntities = EntityManager.Filter(HMasks.NetworkEntityTagComponent);
+            var networkEntities = EntityManager.Filter(networkEntityTagComponentMask);
 
             foreach (var networkEntity in networkEntities)
             {
@@ -42,7 +43,7 @@ namespace Systems
 
         public void EntityReact(IEntity entity, bool isAdded)
         {
-            if (entity.ContainsMask(ref HMasks.NetworkEntityTagComponent))
+            if (entity.ContainsMask(ref networkEntityTagComponentMask))
             {
                 foreach (var nc in entity.GetComponentsByType<INetworkComponent>())
                 {
@@ -63,18 +64,18 @@ namespace Systems
 
             for (int i = 0; i < currentCount; i++)
             {
-                if (networkComponents[i].IsDirty && networkComponents[i].IsAlive)
+                if (networkComponents.Data[i].IsDirty && networkComponents.Data[i].IsAlive)
                 {
-                    var compGuid = networkComponents[i].Owner.GUID;
+                    var compGuid = networkComponents.Data[i].Owner.GUID;
 
-                    if (networkComponents[i] is IUnreliable)
-                        dataSenderSystem.SyncSendComponentToAll(networkComponents[i], compGuid, LiteNetLib.DeliveryMethod.Unreliable);
+                    if (networkComponents.Data[i] is IUnreliable)
+                        dataSenderSystem.SendComponentToAll(networkComponents.Data[i], LiteNetLib.DeliveryMethod.Unreliable);
                     else
-                        dataSenderSystem.SyncSendComponentToAll(networkComponents[i], compGuid, LiteNetLib.DeliveryMethod.ReliableUnordered);
+                        dataSenderSystem.SendComponentToAll(networkComponents.Data[i], LiteNetLib.DeliveryMethod.ReliableUnordered);
                 }
 
-                networkComponents[i].IsDirty = false;
-                networkComponents[i].Version++;
+                networkComponents.Data[i].IsDirty = false;
+                networkComponents.Data[i].Version++;
             }
         }
     }

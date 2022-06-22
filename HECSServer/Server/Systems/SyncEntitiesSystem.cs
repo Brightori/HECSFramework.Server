@@ -38,7 +38,7 @@ namespace Systems
 
             for (int i = 0; i < currentCount; i++)
             {
-                var client = clients[i];
+                var client = clients.Data[i];
                 if (!client.IsAlive()) continue;
                 if (client.GetWorldSliceIndexComponent().Index == syncEntitiesHolderComponent.CurrentIndex) continue;
                 if (!client.GetClientTagComponent().IsReadyToSync) continue;

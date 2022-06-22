@@ -12,7 +12,10 @@ namespace Components
 
         public ConcurrencyList<Guid> DefaultEntitiesOnLocation = new ConcurrencyList<Guid>();
         public IReadOnlyDictionary<Guid, IEntity> SyncEntities => syncEntities;
-        
+
+        private HECSMask worldSliceIndexComponentMask = HMasks.GetMask<WorldSliceIndexComponent>();
+
+
         public int CurrentIndex
         {
             get => currentIndex;
@@ -45,7 +48,7 @@ namespace Components
         {
             foreach (var kvp in syncEntities)
             {
-                if (kvp.Value.TryGetHecsComponent(HMasks.WorldSliceIndexComponent, out WorldSliceIndexComponent sliceIndex))
+                if (kvp.Value.TryGetHecsComponent(worldSliceIndexComponentMask, out WorldSliceIndexComponent sliceIndex))
                     sliceIndex.Index = CurrentIndex;
             }
         }
