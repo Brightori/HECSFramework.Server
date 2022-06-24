@@ -10,13 +10,14 @@ namespace HECSFramework.Server
     [DataContract, Serializable]
     internal partial class Config
     {
-        [DataMember] public int ServerTickMilliseconds { get; private set; } = 2000;
+        [DataMember] public int ServerTickMilliseconds { get; private set; } = 100;
         [DataMember] public string ServerName { get; private set; } = "HECSServer";
         [DataMember] public string ServerPassword { get; private set; } = "ClausUmbrella";
         [DataMember] public bool DebugLogLevelEnabled { get; private set; } = false;
         [DataMember] public bool StatisticsEnabled { get; private set; } = false;
         [DataMember] public bool ExtendedStatisticsEnabled { get; private set; } = false;
         [DataMember] public int StatisticsLoggingIntervalMilliseconds { get; private set; } = 10000;
+        [DataMember] public int DisconnectTimeOut { get; private set; } = 6000;
 
         public static Config Instance => lazy.Value;
         private static Lazy<Config> lazy = new Lazy<Config>(() => new Config());

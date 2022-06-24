@@ -35,7 +35,7 @@ namespace Systems
             }
 
             HECSDebug.Log($"New connection: {command.Client}.");
-            ServerData serverData = new ServerData{ServerTickIntervalMilliseconds = Config.Instance.ServerTickMilliseconds, ConfigData = JsonConvert.SerializeObject(Config.Instance, Formatting.Indented)};
+            ServerData serverData = new ServerData{ DisconnectTimeoutMs = Config.Instance.DisconnectTimeOut, ServerTickIntervalMilliseconds = Config.Instance.ServerTickMilliseconds, ConfigData = JsonConvert.SerializeObject(Config.Instance, Formatting.Indented)};
             dataSenderSystem.SendCommand(connectionsHolderComponent.ClientConnectionsGUID[command.Client], new ClientConnectSuccessCommand { ServerData = serverData });
             Owner.Command(new NewConnectionCommand { Client = command.Client });
         }
