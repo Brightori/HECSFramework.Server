@@ -42,7 +42,7 @@ namespace Systems
 
         public void AfterEntityInit()
         {
-            Owner.TryGetSystem(out dataSenderSystem);
+            dataSenderSystem = Owner.World.GetSingleSystem<DataSenderSystem>();
         }
 
         private void Listener_ConnectionRequestEvent(ConnectionRequest request)
@@ -91,7 +91,7 @@ namespace Systems
             var id = peer.EndPoint.GetHashCode();
             var clientGuid = connect.Client;
 
-            invalidVersion = connect.Version != applVersionComponent.Version;
+            invalidVersion = false;// connect.Version != applVersionComponent.Version;
             if (invalidVersion)
             {
                 dataSenderSystem.SendCommand(peer, Guid.Empty, new DisconnectCommand { Reason = "Update your client to actual version" });

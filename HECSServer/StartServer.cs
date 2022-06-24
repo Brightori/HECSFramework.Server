@@ -3,11 +3,11 @@ using Systems;
 
 namespace HECSFramework.Server
 {
-    class StartServer
+    public static class StartServer
     {
         public static uint Tick = 0;
         
-        internal static void Start(string[] args)
+        public static void Start(string[] args)
         {
             Config.Load();
             EntityManager entityManager = new EntityManager(16);
@@ -28,6 +28,7 @@ namespace HECSFramework.Server
 
                 Thread.Sleep(Config.Instance.ServerTickMilliseconds);
                 Tick++;
+
             }
         }
     }
