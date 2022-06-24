@@ -1,4 +1,5 @@
 ﻿using Commands;
+using Components;
 using System;
 using System.Diagnostics;
 using Systems;
@@ -9,11 +10,13 @@ namespace HECSFramework.Server
     {
         private readonly DataSenderSystem dataSenderSystem;
         private readonly bool sendToClient;
+        private readonly TimeComponent time;
 
-        public HECSDebugServerSide(DataSenderSystem dataSenderSystem, bool sendToClient = false)
+        public HECSDebugServerSide(DataSenderSystem dataSenderSystem, TimeComponent time, bool sendToClient = false)
         {
             this.dataSenderSystem = dataSenderSystem;
             this.sendToClient = sendToClient;
+            this.time = time;
         }
 
         public void LogDebug(string info, object context)
@@ -21,17 +24,17 @@ namespace HECSFramework.Server
             if (!Config.Instance.DebugLogLevelEnabled) return;
 
             var contextPart = context != null ? $"[{context.GetType().Name}]" : string.Empty;
-            Console.WriteLine($"[Debug][{DateTime.Now:hh:mm:ss:fff}][{StartServer.Tick}]{contextPart}: {info}");
+            Console.WriteLine($"[Debug][{DateTime.Now:hh:mm:ss:fff}][{time.TickCount}]{contextPart}: {info}");
         }
         
         public void Log(string info)
         {
-            Console.WriteLine($"[INFO][{DateTime.Now:hh:mm:ss:fff}][{StartServer.Tick}]: {info}");
+            Console.WriteLine($"[INFO][{DateTime.Now:hh:mm:ss:fff}][{time.TickCount}]: {info}");
         }
 
         public void LogError(string info)
         {
-            var text = $"[ERROR][{DateTime.Now:hh:mm:ss:fff}][{StartServer.Tick}]: {info}";
+            var text = $"[ERROR][{DateTime.Now:hh:mm:ss:fff}][{time.TickCount}]: {info}";
             Console.WriteLine(text);
 
             if (sendToClient)
@@ -40,7 +43,7 @@ namespace HECSFramework.Server
 
         public void LogWarning(string info)
         {
-            var text = $"[WARN][{DateTime.Now:hh:mm:ss:fff}][{StartServer.Tick}]: {info}";
+            var text = $"[WARN][{DateTime.Now:hh:mm:ss:fff}][{time.TickCount}]: {info}";
             Console.WriteLine(text);
 
             if (sendToClient)

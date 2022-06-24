@@ -8,7 +8,7 @@ using System.Runtime.Serialization;
 namespace HECSFramework.Server
 {
     [DataContract, Serializable]
-    internal partial class Config
+    public partial class Config
     {
         [DataMember] public int ServerTickMilliseconds { get; private set; } = 100;
         [DataMember] public string ServerName { get; private set; } = "HECSServer";
@@ -26,7 +26,7 @@ namespace HECSFramework.Server
         {
         }
 
-        public static void Load()
+        public static Config Load()
         {
             var path = Path.Combine(AppContext.BaseDirectory, "config.json");
             var path2 = Path.Combine(AppContext.BaseDirectory, "ProjectConfig.cs");
@@ -35,7 +35,7 @@ namespace HECSFramework.Server
             {
                 HECSDebug.Log($"Config file not found at path: {path}.");
                 SaveToFile();
-                return;
+                return new Config();
             }
 
             if (!File.Exists(path2))
@@ -45,7 +45,8 @@ namespace HECSFramework.Server
             
             var text = File.ReadAllText(path);
             var loaded = JsonConvert.DeserializeObject<Config>(text);
-            lazy = new Lazy<Config>(loaded);
+            //lazy = new Lazy<Config>(loaded);
+            return loaded;
         }
 
         private static string GetProjectPart()

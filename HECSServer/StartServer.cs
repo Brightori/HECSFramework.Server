@@ -5,15 +5,15 @@ namespace HECSFramework.Server
 {
     public static class StartServer
     {
-        public static uint Tick = 0;
+      //  public static uint Tick = 0;
         
         public static void Start(string[] args)
         {
-            Config.Load();
+            Config config = Config.Load();
             EntityManager entityManager = new EntityManager(16);
 
-            var server = new Server(8080, Config.Instance.ServerPassword);
-            Debug.Log("Server start");
+            var server = new Server(8080, config);
+            HECSDebug.Log("Server start");
 
             while (true)
             {
@@ -23,13 +23,14 @@ namespace HECSFramework.Server
                 }
                 catch (Exception e)
                 {
-                    Debug.LogError(e.ToString());
+                    HECSDebug.LogError(e.ToString());
                 }
 
                 Thread.Sleep(Config.Instance.ServerTickMilliseconds);
-                Tick++;
+             //   Tick++;
 
             }
         }
+
     }
 }
