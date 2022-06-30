@@ -9,9 +9,7 @@ using MessagePack;
 
 namespace Systems
 {
-    public class ServerNetworkSystem : BaseSystem, IServerNetworkSystem, IUpdatable, IAfterEntityInit,
-        IReactGlobalCommand<InitNetworkSystemCommand>,
-        IReactGlobalCommand<StopServerCommand>
+    public class ServerNetworkSystem : BaseSystem, IServerNetworkSystem
     {
         private enum ServerNetworkSystemState { Default, Sync }
         private string connectionRequestKey = "Test";
@@ -24,22 +22,20 @@ namespace Systems
         private bool[] lockedLists = new bool[64];
 
         private ServerNetworkSystemState state;
-        public static object Lock = new ActorContainerID();
 
         private int clientConnectCommandID = IndexGenerator.GetIndexForType(typeof(ClientConnectCommand));
-        private AppVersionComponent applVersionComponent;
 
         public override void InitSystem()
         {
-            Owner.TryGetHecsComponent(out applVersionComponent);
-            connections = Owner.GetHECSComponent<ConnectionsHolderComponent>();
+        }
+
+        public virtual void GlobalStart()
+        {
+            connections = Owner.World.GetSingleComponent<ConnectionsHolderComponent>();
 
             for (int i = 0; i < lockedLists.Length; i++)
                 pullResolvers.TryAdd(i, new List<ResolverDataContainer>(256));
-        }
 
-        public void AfterEntityInit()
-        {
             dataSenderSystem = Owner.World.GetSingleSystem<DataSenderSystem>();
         }
 
@@ -153,9 +149,13 @@ namespace Systems
                 kvp.Value.Disconnect();
             Environment.Exit(0);
         }
+
+       
     }
 
-    internal interface IServerNetworkSystem : ISystem
+    internal interface IServerNetworkSystem : ISystem, IUpdatable,
+        IReactGlobalCommand<InitNetworkSystemCommand>, IGlobalStart,
+        IReactGlobalCommand<StopServerCommand>
     {
     }
 }
