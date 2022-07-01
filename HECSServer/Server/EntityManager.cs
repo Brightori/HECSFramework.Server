@@ -16,7 +16,7 @@ namespace HECSFramework.Core
         public static World AddServerWorld(Config config,  params IEntityContainer[] entityContainers)
         {
             var newWorld = AddWorld(new ServerWorldContainer());
-            
+
             foreach (var entityContainer in entityContainers)
             {
                 var e = entityContainer.GetEntityFromCoreContainer(newWorld.Index);
@@ -26,6 +26,11 @@ namespace HECSFramework.Core
             newWorld.Init();
 
             newWorld.GetSingleComponent<ConfigComponent>().Data = config;
+
+            var info = newWorld.GetSingleComponent<ServerTagComponent>().Owner.GetOrAddComponent<ConnectionInfoComponent>();
+            
+            info.IP = config.IPAddresss;
+            info.Pass = config.ServerPassword;
 
             newWorld.Command(new StartWorldCommand());
             return newWorld;

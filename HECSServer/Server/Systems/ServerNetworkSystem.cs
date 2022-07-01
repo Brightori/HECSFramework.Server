@@ -84,15 +84,16 @@ namespace Systems
 
             var connect = MessagePackSerializer.Deserialize<ClientConnectCommand>(message.Data);
             var id = peer.EndPoint.GetHashCode();
-            var clientGuid = connect.Client;
 
             if (connections.ClientConnectionsID.ContainsKey(id) && connections.TryGetClientByConnectionID(id, out var clientByID))
                 connections.Owner.Command(new RemoveClientCommand { ClientGuidToRemove = clientByID });
 
-            connections.ClientConnectionsID.TryAdd(id, peer);
-            connections.ClientConnectionsGUID.TryAdd(clientGuid, peer);
-            connections.ClientConnectionsTimes.TryAdd(clientGuid, DateTime.Now);
-            connections.PeerToWorldConnections.TryAdd(peer, EntityManager.Worlds.Data[connect.RoomWorld]);
+            Owner.World.Command(new RegisterClientOnConnectCommand
+            {
+                 Connect = peer,
+                 RoomWorld = connect.RoomWorld,
+            });
+
         }
 
         public void UpdateLocal()
@@ -124,7 +125,9 @@ namespace Systems
             connections.NetManager.ChannelsCount = 64;
             if (Config.Instance.ExtendedStatisticsEnabled)
                 connections.NetManager.EnableStatistics = true;
-            connections.NetManager.Start(command.Port);
+            connections.NetManager.Start(0);
+            
+            Owner.GetHECSComponent<ConnectionInfoComponent>().Port = connections.NetManager.LocalPort; 
 
             listener.NetworkReceiveEvent += Listener_NetworkReceiveEvent;
             listener.PeerConnectedEvent += ListenerOnPeerConnectedEvent;
