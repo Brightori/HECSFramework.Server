@@ -54,7 +54,6 @@ namespace Systems
 
         private void ListenerOnPeerConnectedEvent(NetPeer peer)
         {
-            //connectionsHolderComponent.ClientConnectionsID.Add(peer.Id, peer);
         }
 
         private void Listener_NetworkReceiveEvent(NetPeer peer, NetPacketReader netPacketReader, DeliveryMethod deliveryMethod)
@@ -93,7 +92,6 @@ namespace Systems
                  Connect = peer,
                  RoomWorld = connect.RoomWorld,
             });
-
         }
 
         public void UpdateLocal()

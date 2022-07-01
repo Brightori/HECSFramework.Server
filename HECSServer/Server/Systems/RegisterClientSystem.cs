@@ -26,19 +26,6 @@ namespace Systems
             dataSenderSystem = EntityManager.GetSingleSystem<DataSenderSystem>();
         }
 
-        public void CommandGlobalReact(ClientConnectCommand command)
-        {
-            if (connectionsHolderComponent.EntityToWorldConnections.ContainsKey(command.Client))
-            {
-                HECSDebug.Log($"New connection: {command.Client}. Ignored: already having this guid.");
-                return;
-            }
-
-            HECSDebug.Log($"New connection: {command.Client}.");
-            S
-            Owner.Command(new NewConnectionCommand { Client = command.Client });
-        }
-
         private void CheckWorldConnections(int world)
         {
             if (!connectionsHolderComponent.WorldToPeerClients.ContainsKey(world))
@@ -50,13 +37,13 @@ namespace Systems
             if (!EntityManager.TryGetEntityByID(command.ClientGuidToRemove, out var entityClient))
                 return;
 
-            foreach (var world in EntityManager.Worlds)
-            {
-                var filter = EntityManager.Filter(new FilterMask(HMasks.ClientIDHolderComponent), new FilterMask(HMasks.ServerEntityTagComponent), world.Index);
-                foreach (var c in filter)
-                    if (c.GetClientIDHolderComponent().ClientID == command.ClientGuidToRemove)
-                        entitiesToRemove.Enqueue(c);
-            }
+            //foreach (var world in EntityManager.Worlds)
+            //{
+            //    var filter = EntityManager.Filter(new FilterMask(HMasks.ClientIDHolderComponent), new FilterMask(HMasks.ServerEntityTagComponent), world.Index);
+            //    foreach (var c in filter)
+            //        if (c.GetClientIDHolderComponent().ClientID == command.ClientGuidToRemove)
+            //            entitiesToRemove.Enqueue(c);
+            //}
             
             while (entitiesToRemove.TryDequeue(out var entity))
             {
