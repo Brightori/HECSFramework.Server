@@ -9,7 +9,7 @@ using System.Collections.Concurrent;
 
 namespace Systems
 {
-    internal class RegisterClientSystem : BaseSystem, IAfterEntityInit, IReactGlobalCommand<ClientConnectCommand>, IReactCommand<RemoveClientCommand> 
+    internal class RegisterClientSystem : BaseSystem, IAfterEntityInit, IReactGlobalCommand<RegisterClientOnConnectCommand>, IReactCommand<RemoveClientCommand> 
     {
         private ConnectionsHolderComponent connectionsHolderComponent;
         private DataSenderSystem dataSenderSystem;
@@ -35,8 +35,7 @@ namespace Systems
             }
 
             HECSDebug.Log($"New connection: {command.Client}.");
-            ServerData serverData = new ServerData{ DisconnectTimeoutMs = Config.Instance.DisconnectTimeOut, ServerTickIntervalMilliseconds = Config.Instance.ServerTickMilliseconds, ConfigData = JsonConvert.SerializeObject(Config.Instance, Formatting.Indented)};
-            dataSenderSystem.SendCommand(connectionsHolderComponent.ClientConnectionsGUID[command.Client], new ClientConnectSuccessCommand { ServerData = serverData });
+            S
             Owner.Command(new NewConnectionCommand { Client = command.Client });
         }
 
@@ -72,14 +71,6 @@ namespace Systems
             HECSDebug.Log($"Entity removed from client: {entityClient.GUID}");
         }
 
-      
-
-      
-
-      
-
-      
-
         private IEntity Register(Guid clientId)
         { 
             HECSDebug.LogDebug($"Registered client: {clientId}.", this);
@@ -94,6 +85,17 @@ namespace Systems
             var guidClientPeer = connectionsHolderComponent.ClientConnectionsGUID[clientId];
             connectionsHolderComponent.WorldToPeerClients[Owner.WorldId].TryAdd(guidClientPeer.GetHashCode(), guidClientPeer);
             return client;
+        }
+
+        public void CommandGlobalReact(RegisterClientOnConnectCommand command)
+        {
+            var client = new Entity("Client", command.RoomWorld);
+            new DefaultClientContainer().Init(client);
+            client.Init();
+
+
+            ServerData serverData = new ServerData { DisconnectTimeoutMs = Config.Instance.DisconnectTimeOut, ServerTickIntervalMilliseconds = Config.Instance.ServerTickMilliseconds, ConfigData = JsonConvert.SerializeObject(Config.Instance, Formatting.Indented) };
+            dataSenderSystem.SendCommand(command.Connect, new ClientConnectSuccessCommand { ServerData = serverData }, DeliveryMethod.ReliableOrdered);
         }
     }
 }

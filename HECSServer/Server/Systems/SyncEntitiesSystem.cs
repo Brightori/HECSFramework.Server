@@ -97,7 +97,7 @@ namespace Systems
                 syncEntitiesHolderComponent.RemoveEntity(entity);
         }
 
-        public void ComponentReact(IComponent component, bool isAdded)
+        public void ComponentReact<T>(T component, bool isAdded) where T : IComponent
         {
             if (component.Owner.IsAlive && component is INetworkComponent && component.Owner.ContainsMask(ref HMasks.NetworkComponentsHolder))
                 component.Owner.GetNetworkComponentsHolder().IsDirty = true;

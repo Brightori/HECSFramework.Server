@@ -1,19 +1,15 @@
-﻿using Commands;
+﻿using System.Collections.Concurrent;
+using Commands;
 using Components;
 using HECSFramework.Core;
 using HECSFramework.Network;
 using HECSFramework.Server;
 using LiteNetLib;
 using MessagePack;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 
 namespace Systems
 {
-    public class ServerNetworkSystem : BaseSystem, IServerNetworkSystem, IUpdatable, IAfterEntityInit,
-        IReactGlobalCommand<InitNetworkSystemCommand>,
-        IReactGlobalCommand<StopServerCommand>
+    public class ServerNetworkSystem : BaseSystem, IServerNetworkSystem
     {
         private enum ServerNetworkSystemState { Default, Sync }
         private string connectionRequestKey = "Test";
@@ -26,22 +22,20 @@ namespace Systems
         private bool[] lockedLists = new bool[64];
 
         private ServerNetworkSystemState state;
-        public static object Lock = new ActorContainerID();
 
         private int clientConnectCommandID = IndexGenerator.GetIndexForType(typeof(ClientConnectCommand));
-        private AppVersionComponent applVersionComponent;
 
         public override void InitSystem()
         {
-            Owner.TryGetHecsComponent(out applVersionComponent);
-            connections = Owner.GetHECSComponent<ConnectionsHolderComponent>();
+        }
+
+        public virtual void GlobalStart()
+        {
+            connections = Owner.World.GetSingleComponent<ConnectionsHolderComponent>();
 
             for (int i = 0; i < lockedLists.Length; i++)
                 pullResolvers.TryAdd(i, new List<ResolverDataContainer>(256));
-        }
 
-        public void AfterEntityInit()
-        {
             dataSenderSystem = Owner.World.GetSingleSystem<DataSenderSystem>();
         }
 
@@ -65,15 +59,17 @@ namespace Systems
 
         private void Listener_NetworkReceiveEvent(NetPeer peer, NetPacketReader netPacketReader, DeliveryMethod deliveryMethod)
         {
-            var bytes = netPacketReader.GetRemainingBytes();
-            var message = MessagePackSerializer.Deserialize<ResolverDataContainer>(bytes);
-
-            CheckIfNewConnection(peer, message, out var invalidVersion);
-            if (invalidVersion) return;
-
             try
             {
-                dataProcessor.Process(message);
+                var bytes = netPacketReader.GetRemainingBytes();
+                var message = MessagePackSerializer.Deserialize<ResolverDataContainer>(bytes);
+
+                CheckIfNewConnection(peer, message);
+
+                if (!connections.PeerToWorldConnections.TryGetValue(peer, out var world))
+                    return;
+
+                dataProcessor.Process(message, world);
                 EntityManager.Command(new RawStatisticsCommand { ResolverDataContainer = message });
             }
             catch (Exception e)
@@ -82,30 +78,22 @@ namespace Systems
             }
         }
 
-        private void CheckIfNewConnection(NetPeer peer, ResolverDataContainer message, out bool invalidVersion)
+        private void CheckIfNewConnection(NetPeer peer, ResolverDataContainer message)
         {
-            invalidVersion = false;
             if (message.TypeHashCode != clientConnectCommandID) return;
 
             var connect = MessagePackSerializer.Deserialize<ClientConnectCommand>(message.Data);
             var id = peer.EndPoint.GetHashCode();
-            var clientGuid = connect.Client;
-
-            invalidVersion = false;// connect.Version != applVersionComponent.Version;
-            if (invalidVersion)
-            {
-                dataSenderSystem.SendCommand(peer, Guid.Empty, new DisconnectCommand { Reason = "Update your client to actual version" });
-                HECSDebug.Log($"Old client version detected: {connect.Version}. Rejecting...");
-                peer.Disconnect();
-                return;
-            }
 
             if (connections.ClientConnectionsID.ContainsKey(id) && connections.TryGetClientByConnectionID(id, out var clientByID))
                 connections.Owner.Command(new RemoveClientCommand { ClientGuidToRemove = clientByID });
 
-            connections.ClientConnectionsID.TryAdd(id, peer);
-            connections.ClientConnectionsGUID.TryAdd(clientGuid, peer);
-            connections.ClientConnectionsTimes.TryAdd(clientGuid, DateTime.Now);
+            Owner.World.Command(new RegisterClientOnConnectCommand
+            {
+                 Connect = peer,
+                 RoomWorld = connect.RoomWorld,
+            });
+
         }
 
         public void UpdateLocal()
@@ -121,7 +109,7 @@ namespace Systems
 
             EntityManager.Command(new SyncComponentsCommand(), -1);
         }
-       
+
         public void CommandGlobalReact(InitNetworkSystemCommand command)
         {
             if (!string.IsNullOrEmpty(command.Key))
@@ -137,7 +125,9 @@ namespace Systems
             connections.NetManager.ChannelsCount = 64;
             if (Config.Instance.ExtendedStatisticsEnabled)
                 connections.NetManager.EnableStatistics = true;
-            connections.NetManager.Start(command.Port);
+            connections.NetManager.Start(0);
+            
+            Owner.GetHECSComponent<ConnectionInfoComponent>().Port = connections.NetManager.LocalPort; 
 
             listener.NetworkReceiveEvent += Listener_NetworkReceiveEvent;
             listener.PeerConnectedEvent += ListenerOnPeerConnectedEvent;
@@ -157,7 +147,9 @@ namespace Systems
         }
     }
 
-    internal interface IServerNetworkSystem : ISystem
+    internal interface IServerNetworkSystem : ISystem, IUpdatable,
+        IReactGlobalCommand<InitNetworkSystemCommand>, IGlobalStart,
+        IReactGlobalCommand<StopServerCommand>
     {
     }
 }

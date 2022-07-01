@@ -1,9 +1,7 @@
-﻿using HECSFramework.Core;
+﻿using System.Runtime.Serialization;
+using HECSFramework.Core;
 using HECSFramework.Core.Generator;
 using Newtonsoft.Json;
-using System;
-using System.IO;
-using System.Runtime.Serialization;
 
 namespace HECSFramework.Server
 {
@@ -11,6 +9,7 @@ namespace HECSFramework.Server
     public partial class Config
     {
         [DataMember] public int ServerTickMilliseconds { get; private set; } = 100;
+        [DataMember] public string IPAddresss { get; private set; } = "127.0.0.1";
         [DataMember] public string ServerName { get; private set; } = "HECSServer";
         [DataMember] public string ServerPassword { get; private set; } = "ClausUmbrella";
         [DataMember] public bool DebugLogLevelEnabled { get; private set; } = false;

@@ -34,7 +34,7 @@ namespace Systems
             }
         }
 
-        public void ComponentReact(IComponent component, bool isAdded)
+        public void ComponentReact<T>(T component, bool isAdded) where T : IComponent
         {
             bool clientHolderIsAdded = isAdded && component.ComponentsMask.Index == HMasks.ClientIDHolderComponent.Index;
             if (clientHolderIsAdded)

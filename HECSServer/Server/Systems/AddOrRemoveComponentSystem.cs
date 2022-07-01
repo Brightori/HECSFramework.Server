@@ -5,8 +5,8 @@ using HECSFramework.Network;
 
 namespace Systems
 {
-    [Documentation("Network", "Server", "Эта система обрабатывает добавление сетевых компонентов, и добавляет их на клиента")]
-    public class AddOrRemoveComponentSystem : BaseSystem,
+    [Documentation(Doc.Network, Doc.Server, "This system add or remove ")]
+    public class AddOrRemoveNetworkComponentSystem : BaseSystem,
         IReactGlobalCommand<AddNetWorkComponentCommand>,
         IReactGlobalCommand<RemoveNetWorkComponentCommand>
     {
