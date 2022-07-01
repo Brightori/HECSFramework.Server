@@ -2,6 +2,7 @@ using Commands;
 using Components;
 using HECSFramework.Core;
 using HECSFramework.Network;
+using System.Collections.Concurrent;
 using Systems;
 
 namespace HECSFramework.Server
@@ -15,11 +16,18 @@ namespace HECSFramework.Server
         private volatile bool gameloop = false, gameloopInProgress = false;
         private Config config;
         private TimeComponent time;
-        public ulong ServerTime;
+        private List<World> addedWrold = new List<World>();
+        private List<World> worlds = new List<World>();
+        private ConcurrentQueue<int> removedWrold = new ConcurrentQueue<int>();
+
+        public ulong ServerTime { get; private set; }
+        public int SystemWorldIndex { get; private set; }
+
 
         public Server(int port, Config config)
         {
             this.config = config;
+            SystemWorldIndex = AddWorld().Index;
             var server = new Entity("Server");
             
             var dataSenderSys = new DataSenderSystem();
@@ -41,29 +49,42 @@ namespace HECSFramework.Server
             server.AddHecsComponent(time);
             
             
-            server.AddHecsSystem(new ServerNetworkSystem());
+            server.AddHecsSystem(new ServerNetworkSystem() { Port = port, Key = config.ServerPassword });
             server.AddHecsSystem(new RegisterClientSystem());
             server.AddHecsSystem(new RegisterClientEntitySystem());
             server.AddHecsSystem(new AddOrRemoveComponentSystem());
-            server.Init();
+            server.Init(SystemWorldIndex);
             
             Start(server);
 
-            foreach (var w in EntityManager.Worlds)
-            {
-                w.GlobalUpdateSystem.Start();
-                w.GlobalUpdateSystem.LateStart();
-            }
+           
             
-            EntityManager.Command(new InitNetworkSystemCommand { Port = port, Key = config.ServerPassword });
+        //    EntityManager.Command(new InitNetworkSystemCommand { Port = port, Key = config.ServerPassword });
+        }
+
+
+
+        public World AddWorld(params IEntityContainer[] container)
+        {
+            World world = EntityManager.AddWorld(container);
+            lock (addedWrold)
+            {
+                addedWrold.Add(world);
+            }
+            return world;
+        }
+
+        public void RemoveWorld(int worldIdentifier)
+        {
+            removedWrold.Enqueue(worldIdentifier);
         }
 
         partial void Start(IEntity server);
 
-        public void Update()
+        private void Update()
         {
             ServerTime += (ulong)Config.Instance.ServerTickMilliseconds;
-            foreach (var w in EntityManager.Worlds)
+            foreach (var w in worlds)
             {
                 w.GlobalUpdateSystem.Update();
                 w.GlobalUpdateSystem.LateUpdate();
@@ -77,10 +98,41 @@ namespace HECSFramework.Server
             {
                 try
                 {
-                   Update();
-                   int sleepTime = (int)time.TimeUntilTick;
-                   if (sleepTime > 0) { Thread.Sleep(sleepTime); }
-                   time.NextTick();
+                    lock (addedWrold)
+                    {
+                        foreach(var world in addedWrold)
+                        {
+                            worlds.Add(world);
+                            world.GlobalUpdateSystem.Start();
+                        }
+                        foreach (var world in addedWrold)
+                        {
+                            world.GlobalUpdateSystem.LateStart();
+                        }
+                        addedWrold.Clear();
+                    }
+
+                    Update();
+
+                    while (removedWrold.TryDequeue(out int identifier))
+                    {
+                        worlds.RemoveAll(world =>
+                        {
+                            if (world.Index == identifier)
+                            {
+                                world.Dispose();
+                                EntityManager.RemoveWorld(identifier);
+                                return true;
+                            }
+                            return false;
+                        });
+                    }
+                    removedWrold.Clear();
+
+
+                    int sleepTime = (int)time.TimeUntilTick;
+                    if (sleepTime > 0) { Thread.Sleep(sleepTime); }
+                    time.NextTick();
                 }
                 catch (Exception e)
                 {
@@ -94,14 +146,14 @@ namespace HECSFramework.Server
         {
             if (gameloop || gameloopInProgress)
             {
-                HECSDebug.LogError("Game loop already started");
-                return;
+                throw new InvalidOperationException("Game loop already started");
             }
-            gameloop = gameloopInProgress = true;    
-            Task.Run(() =>
+            gameloop = gameloopInProgress = true;
+            new Thread(GameLoop)
             {
-               GameLoop();
-            });
+                IsBackground = true
+            }
+            .Start();
         }
         public void StopGameLoop()
         {
