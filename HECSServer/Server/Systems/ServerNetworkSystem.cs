@@ -59,15 +59,17 @@ namespace Systems
 
         private void Listener_NetworkReceiveEvent(NetPeer peer, NetPacketReader netPacketReader, DeliveryMethod deliveryMethod)
         {
-            var bytes = netPacketReader.GetRemainingBytes();
-            var message = MessagePackSerializer.Deserialize<ResolverDataContainer>(bytes);
-
-            CheckIfNewConnection(peer, message, out var invalidVersion);
-            if (invalidVersion) return;
-
             try
             {
-                dataProcessor.Process(message);
+                var bytes = netPacketReader.GetRemainingBytes();
+                var message = MessagePackSerializer.Deserialize<ResolverDataContainer>(bytes);
+
+                CheckIfNewConnection(peer, message);
+
+                if (!connections.PeerToWorldConnections.TryGetValue(peer, out var world))
+                    return;
+
+                dataProcessor.Process(message, world);
                 EntityManager.Command(new RawStatisticsCommand { ResolverDataContainer = message });
             }
             catch (Exception e)
@@ -76,23 +78,13 @@ namespace Systems
             }
         }
 
-        private void CheckIfNewConnection(NetPeer peer, ResolverDataContainer message, out bool invalidVersion)
+        private void CheckIfNewConnection(NetPeer peer, ResolverDataContainer message)
         {
-            invalidVersion = false;
             if (message.TypeHashCode != clientConnectCommandID) return;
 
             var connect = MessagePackSerializer.Deserialize<ClientConnectCommand>(message.Data);
             var id = peer.EndPoint.GetHashCode();
             var clientGuid = connect.Client;
-
-            invalidVersion = false;// connect.Version != applVersionComponent.Version;
-            if (invalidVersion)
-            {
-                dataSenderSystem.SendCommand(peer, Guid.Empty, new DisconnectCommand { Reason = "Update your client to actual version" });
-                HECSDebug.Log($"Old client version detected: {connect.Version}. Rejecting...");
-                peer.Disconnect();
-                return;
-            }
 
             if (connections.ClientConnectionsID.ContainsKey(id) && connections.TryGetClientByConnectionID(id, out var clientByID))
                 connections.Owner.Command(new RemoveClientCommand { ClientGuidToRemove = clientByID });
@@ -100,6 +92,7 @@ namespace Systems
             connections.ClientConnectionsID.TryAdd(id, peer);
             connections.ClientConnectionsGUID.TryAdd(clientGuid, peer);
             connections.ClientConnectionsTimes.TryAdd(clientGuid, DateTime.Now);
+            connections.PeerToWorldConnections.TryAdd(peer, EntityManager.Worlds.Data[connect.RoomWorld]);
         }
 
         public void UpdateLocal()
@@ -115,7 +108,7 @@ namespace Systems
 
             EntityManager.Command(new SyncComponentsCommand(), -1);
         }
-       
+
         public void CommandGlobalReact(InitNetworkSystemCommand command)
         {
             if (!string.IsNullOrEmpty(command.Key))
@@ -149,8 +142,6 @@ namespace Systems
                 kvp.Value.Disconnect();
             Environment.Exit(0);
         }
-
-       
     }
 
     internal interface IServerNetworkSystem : ISystem, IUpdatable,
