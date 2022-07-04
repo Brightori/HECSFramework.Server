@@ -7,6 +7,7 @@ using HECSFramework.Core;
 
 namespace Components
 {
+    [Documentation(Doc.Server, Doc.HECS, "The component contains a list of entities owned by the client")]
     public sealed class ClientEntitiesHolderComponent : BaseComponent
     {
         public ConcurrencyList<IEntity> ClientEntities = new ConcurrencyList<IEntity>(8);
