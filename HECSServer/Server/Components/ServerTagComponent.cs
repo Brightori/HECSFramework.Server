@@ -2,7 +2,7 @@
 
 namespace Components
 {
-    public class ServerTagComponent : BaseComponent
+    public class ServerTagComponent : BaseComponent, IWorldSingleComponent
     {
     }
 }
