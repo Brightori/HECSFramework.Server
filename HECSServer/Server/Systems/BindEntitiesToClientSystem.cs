@@ -1,6 +1,7 @@
 ﻿using Commands;
 using Components;
 using HECSFramework.Core;
+using System;
 using System.Collections.Concurrent;
 
 namespace Systems
@@ -38,33 +39,33 @@ namespace Systems
                     clientIDholder.ClientID = data.client;
                 }
 
-                if (data.entity.TryGetSystem(out EntityReplicationSystem entityReplication))
-                {
+                //if (data.entity.TryGetSystem(out EntityReplicationSystem entityReplication))
+                //{
 
-                    do { entityReplication.ID = generatorID++; } while (replicatedEntities.ContainsKey(entityReplication.ID));
+                //    do { entityReplication.ID = generatorID++; } while (replicatedEntities.ContainsKey(entityReplication.ID));
 
-                    //Send a command to all entities in the world to create this new entity
+                //    //Send a command to all entities in the world to create this new entity
 
-                    var createCMD = new CreateReplicationEntity()
-                    {
-                        EntityID = entityReplication.ID,
-                        ContainerID = 0,
-                        Components = entityReplication.GetFullComponentsData()
-                    };
+                //    var createCMD = new CreateReplicationEntity()
+                //    {
+                //        EntityID = entityReplication.ID,
+                //        ContainerID = 0,
+                //        Components = entityReplication.GetFullComponentsData()
+                //    };
 
-                    dataSender.SendCommand(ClientEntities.Values, createCMD);
-                    //Send a command to the new entity to create all the entities that are in the world
+                //    dataSender.SendCommand(ClientEntities.Values, createCMD);
+                //    //Send a command to the new entity to create all the entities that are in the world
 
-                    foreach (EntityReplicationSystem e in replicatedEntities.Values)
-                    {
+                //    foreach (EntityReplicationSystem e in replicatedEntities.Values)
+                //    {
 
-                        var c = new CreateReplicationEntity()
-                        {
-                            EntityID = e.ID,
-                            Components = e.GetFullComponentsData()
-                        };
-                    }
-                }
+                //        var c = new CreateReplicationEntity()
+                //        {
+                //            EntityID = e.ID,
+                //            Components = e.GetFullComponentsData()
+                //        };
+                //    }
+                //}
             }
         }
     }

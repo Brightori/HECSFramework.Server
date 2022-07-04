@@ -6,7 +6,7 @@ using HECSFramework.Network;
 namespace Systems
 {
     [Documentation(Doc.Network, Doc.Server, "This system add or remove ")]
-    public class AddOrRemoveNetworkComponentSystem : BaseSystem,
+    public sealed class AddOrRemoveNetworkComponentSystem : BaseSystem,
         IReactGlobalCommand<AddNetWorkComponentCommand>,
         IReactGlobalCommand<RemoveNetWorkComponentCommand>
     {
