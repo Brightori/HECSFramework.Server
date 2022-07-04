@@ -8,7 +8,7 @@ using System.Collections.Concurrent;
 namespace Systems
 {
     [Documentation(Doc.Server, "The system is responsible for adding entities to the room. Associates an entity with an owner(Client). Registers the entity in the replication system")]
-    public class BindEntitiesToClientSystem : BaseSystem, IUpdatable, IReactGlobalCommand<NewClientOnServerCommand>
+    public class BindEntitiesToClientSystem : BaseSystem, IUpdatable, IReactGlobalCommand<NewClientOnServerCommand>, IGlobalStart
     {
         private ReplicatedEntitiesComponent replicatedEntities;
         private DataSenderSystem dataSender;
@@ -17,13 +17,16 @@ namespace Systems
 
         private ConcurrencyList<IEntity> clients;
 
-
-       
-        public override void InitSystem()
+        public void GlobalStart()
         {
             clients = Owner.World.Filter(new FilterMask(HMasks.ClientTagComponent));
             dataSender = Owner.World.GetSingleComponent<RoomInfoComponent>().ServerWorld.GetSingleSystem<DataSenderSystem>();
             replicatedEntities = Owner.World.GetSingleComponent<ReplicatedEntitiesComponent>();
+        }
+
+        public override void InitSystem()
+        {
+           
         }
 
         public void AddEntity(Guid clientID, IEntity entity)
