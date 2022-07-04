@@ -19,18 +19,11 @@ namespace Systems
         public override void InitSystem()
         {
             connectionsHolderComponent = EntityManager.GetSingleComponent<ConnectionsHolderComponent>();
-            CheckWorldConnections(Owner.WorldId);
         }
 
         public void AfterEntityInit()
         {
             dataSenderSystem = EntityManager.GetSingleSystem<DataSenderSystem>();
-        }
-
-        private void CheckWorldConnections(int world)
-        {
-            if (!connectionsHolderComponent.WorldToPeerClients.ContainsKey(world))
-                connectionsHolderComponent.WorldToPeerClients.TryAdd(world, new ConcurrentDictionary<int, NetPeer>());
         }
 
         public void CommandReact(RemoveClientCommand command)
@@ -59,29 +52,13 @@ namespace Systems
             HECSDebug.Log($"Entity removed from client: {entityClient.GUID}");
         }
 
-        private IEntity Register(Guid clientId)
-        {
-            HECSDebug.LogDebug($"Registered client: {clientId}.", this);
-            var client = new Entity($"Client {clientId}");
-            client.SetGuid(clientId);
-            client.AddHecsComponent(new ClientTagComponent());
-            client.AddHecsComponent(new WorldSliceIndexComponent());
-            client.AddHecsComponent(new ClientIDHolderComponent { ClientID = client.GUID });
-
-            client.Init(Owner.WorldId);
-            connectionsHolderComponent.EntityToWorldConnections.TryAdd(clientId, Owner.WorldId);
-            var guidClientPeer = connectionsHolderComponent.ClientConnectionsGUID[clientId];
-            connectionsHolderComponent.WorldToPeerClients[Owner.WorldId].TryAdd(guidClientPeer.GetHashCode(), guidClientPeer);
-            return client;
-        }
-
         public void CommandGlobalReact(RegisterClientOnConnectCommand command)
         {
             var client = new Entity("Client", command.RoomWorld);
             new DefaultClientContainer().Init(client);
             client.Init();
 
-            //connectionsHolderComponent.
+            connectionsHolderComponent.RegisterClient(client, command.Connect, client.World);
 
             var config = Owner.World.GetSingleComponent<ConfigComponent>();
             ServerData serverData = new ServerData

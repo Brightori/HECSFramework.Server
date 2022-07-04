@@ -1,8 +1,9 @@
-using Commands;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
 using Components;
 using HECSFramework.Core;
-using HECSFramework.Network;
-using System.Collections.Concurrent;
 using Systems;
 
 namespace HECSFramework.Server
@@ -49,10 +50,10 @@ namespace HECSFramework.Server
             server.AddHecsComponent(time);
             
             
-            server.AddHecsSystem(new ServerNetworkSystem() { Port = port, Key = config.ServerPassword });
-            server.AddHecsSystem(new RegisterClientSystem());
-            server.AddHecsSystem(new RegisterClientEntitySystem());
-            server.AddHecsSystem(new AddOrRemoveComponentSystem());
+            //server.AddHecsSystem(new ServerNetworkSystem() { Port = port, Key = config.ServerPassword });
+            //server.AddHecsSystem(new RegisterClientSystem());
+            //server.AddHecsSystem(new RegisterClientEntitySystem());
+            //server.AddHecsSystem(new AddOrRemoveComponentSystem());
             server.Init(SystemWorldIndex);
             
             Start(server);

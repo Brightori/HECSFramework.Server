@@ -13,12 +13,12 @@ namespace Systems
             clientHolder.ClientID = command.ClientGuid;
             entity.Init();
 
-            Owner.GetSyncEntitiesHolderComponent().AddEntity(entity);
+            //Owner.GetSyncEntitiesHolderComponent().AddEntity(entity);
 
-            if (EntityManager.TryGetEntityByID(command.ClientGuid, out var client))
-            {
-                client.GetWorldSliceIndexComponent().EntitiesOnClient.Add(entity.GUID);
-            }
+            //if (EntityManager.TryGetEntityByID(command.ClientGuid, out var client))
+            //{
+            //    client.GetWorldSliceIndexComponent().EntitiesOnClient.Add(entity.GUID);
+            //}
 
             HECSDebug.Log($"Spawn entity received {entity.GUID} from client {command.ClientGuid} ");
         }
