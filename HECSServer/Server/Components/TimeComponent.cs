@@ -12,6 +12,7 @@ namespace Components
     {
         private Config config;
         private long currentTick;
+        public DateTime CurrentTime => DateTime.UtcNow;
 
         public TimeComponent() { }
         public TimeComponent(Config config)

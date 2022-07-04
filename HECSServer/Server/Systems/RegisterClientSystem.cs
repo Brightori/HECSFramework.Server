@@ -9,7 +9,8 @@ using System.Collections.Concurrent;
 
 namespace Systems
 {
-    internal class RegisterClientSystem : BaseSystem, IAfterEntityInit, IReactGlobalCommand<RegisterClientOnConnectCommand>, IReactCommand<RemoveClientCommand> 
+    internal class RegisterClientSystem : BaseSystem, IAfterEntityInit, 
+        IReactGlobalCommand<RegisterClientOnConnectCommand>, IReactCommand<RemoveClientCommand>
     {
         private ConnectionsHolderComponent connectionsHolderComponent;
         private DataSenderSystem dataSenderSystem;
@@ -44,7 +45,7 @@ namespace Systems
             //        if (c.GetClientIDHolderComponent().ClientID == command.ClientGuidToRemove)
             //            entitiesToRemove.Enqueue(c);
             //}
-            
+
             while (entitiesToRemove.TryDequeue(out var entity))
             {
                 entity.HecsDestroy();
@@ -53,19 +54,19 @@ namespace Systems
 
             connectionsHolderComponent.ClientConnectionsGUID.TryRemove(command.ClientGuidToRemove, out var peer);
             connectionsHolderComponent.ClientConnectionsTimes.TryRemove(command.ClientGuidToRemove, out var times);
-            
+
             entityClient.HecsDestroy();
             HECSDebug.Log($"Entity removed from client: {entityClient.GUID}");
         }
 
         private IEntity Register(Guid clientId)
-        { 
+        {
             HECSDebug.LogDebug($"Registered client: {clientId}.", this);
             var client = new Entity($"Client {clientId}");
             client.SetGuid(clientId);
             client.AddHecsComponent(new ClientTagComponent());
             client.AddHecsComponent(new WorldSliceIndexComponent());
-            client.AddHecsComponent(new ClientIDHolderComponent {ClientID = client.GUID});
+            client.AddHecsComponent(new ClientIDHolderComponent { ClientID = client.GUID });
 
             client.Init(Owner.WorldId);
             connectionsHolderComponent.EntityToWorldConnections.TryAdd(clientId, Owner.WorldId);
@@ -80,9 +81,20 @@ namespace Systems
             new DefaultClientContainer().Init(client);
             client.Init();
 
+            //connectionsHolderComponent.
 
-            ServerData serverData = new ServerData { DisconnectTimeoutMs = Config.Instance.DisconnectTimeOut, ServerTickIntervalMilliseconds = Config.Instance.ServerTickMilliseconds, ConfigData = JsonConvert.SerializeObject(Config.Instance, Formatting.Indented) };
-            dataSenderSystem.SendCommand(command.Connect, new ClientConnectSuccessCommand { ServerData = serverData }, DeliveryMethod.ReliableOrdered);
+            var config = Owner.World.GetSingleComponent<ConfigComponent>();
+            ServerData serverData = new ServerData
+            {
+                DisconnectTimeoutMs = config.Data.DisconnectTimeOut,
+                ServerTickIntervalMilliseconds = Config.Instance.ServerTickMilliseconds,
+                ConfigData = JsonConvert.SerializeObject(config.Data, Formatting.Indented)
+            };
+
+            dataSenderSystem.SendCommand(command.Connect, 
+                new ClientConnectSuccessCommand { ServerData = serverData }, DeliveryMethod.ReliableOrdered);
+
+            EntityManager.Worlds.Data[command.RoomWorld].Command(new NewClientOnServerCommand { Client = client.GUID });
         }
     }
 }
