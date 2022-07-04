@@ -27,6 +27,7 @@ namespace HECSFramework.Core
             info.Pass = config.ServerPassword;
 
             newWorld.Command(new StartWorldCommand());
+            newWorld.Command(new InitNetworkSystemCommand());
             return newWorld;
         }
 

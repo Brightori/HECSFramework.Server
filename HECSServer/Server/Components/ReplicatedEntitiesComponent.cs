@@ -7,7 +7,7 @@ namespace Components
 {
 
     [Serializable, Documentation(Doc.Server, Doc.HECS, "The component contains a list of all replicated entities in the room")]
-    public class ReplicatedEntitiesComponent : BaseComponent, INotReplicable
+    public class ReplicatedEntitiesComponent : BaseComponent, INotReplicable, IWorldSingleComponent
     {
         private short generatorID = 1;
         private Dictionary<short, IEntity> replicatedEntities = new Dictionary<short, IEntity>();

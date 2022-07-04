@@ -14,7 +14,7 @@ namespace Systems
     public class ServerNetworkSystem : BaseSystem, IServerNetworkSystem
     {
         private enum ServerNetworkSystemState { Default, Sync }
-        private string connectionRequestKey = "Test";
+        private string connectionRequestKey = "ClausUmbrella";
 
         private ConnectionsHolderComponent connections;
         private DataSenderSystem dataSenderSystem;
@@ -125,7 +125,7 @@ namespace Systems
             connections.NetManager.ChannelsCount = 64;
             if (Config.Instance.ExtendedStatisticsEnabled)
                 connections.NetManager.EnableStatistics = true;
-            connections.NetManager.Start(0);
+            connections.NetManager.Start();
             
             Owner.GetHECSComponent<ConnectionInfoComponent>().Port = connections.NetManager.LocalPort; 
 
