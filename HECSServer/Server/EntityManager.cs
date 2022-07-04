@@ -15,13 +15,7 @@ namespace HECSFramework.Core
         /// <returns></returns>
         public static World AddServerWorld(Config config,  params IEntityContainer[] entityContainers)
         {
-            var newWorld = AddWorld(new ServerWorldContainer());
-
-            foreach (var entityContainer in entityContainers)
-            {
-                var e = entityContainer.GetEntityFromCoreContainer(newWorld.Index);
-                newWorld.AddToInit(e);
-            }
+            var newWorld = AddWorld(new ServerWorldContainer(), entityContainers);
 
             newWorld.Init();
 
@@ -56,6 +50,22 @@ namespace HECSFramework.Core
             foreach (var ec in entityCoreContainers)
             {
                 var entity = ec.GetEntityFromCoreContainer(world.Index);
+                world.AddToInit(entity);
+            }
+
+            return world;
+        }
+
+        public static World AddWorld(IEntityContainer entityContainer, params IEntityContainer[] entityCoreContainers)
+        {
+            var world = AddWorld();
+
+            var newEntity = entityContainer.GetEntityFromCoreContainer(world);
+            world.AddToInit(newEntity);
+
+            foreach (var ec in entityCoreContainers)
+            {
+                var entity = ec.GetEntityFromCoreContainer(world);
                 world.AddToInit(entity);
             }
 
