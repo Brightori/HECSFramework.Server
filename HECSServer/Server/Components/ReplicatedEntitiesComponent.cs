@@ -1,6 +1,7 @@
 ﻿using HECSFramework.Core;
 using HECSFramework.Network;
 using System;
+using System.Collections.Generic;
 
 namespace Components
 {
