@@ -36,6 +36,7 @@ namespace Systems
 
         public void UpdateLocal()
         {
+
             while (incomingEntities.TryDequeue(out var data))
             {
                 //Bind a entity to client
@@ -65,8 +66,23 @@ namespace Systems
                         Components = replication.GetFullComponentsData()
                     };
 
-                    foreach(var c in clients) { dataSender.SendCommand(c.GetHECSComponent<ClientConnectionInfoComponent>().ClientNetPeer, createCMD, DeliveryMethod.ReliableOrdered); }
+                    foreach (var c in clients)
+                    {
+                        if(c == null)
+                        {
+                            HECSDebug.Log($"Empty slot in client list");
+                            continue;
+                        }
+                        var peer = c.GetHECSComponent<ClientConnectionInfoComponent>()?.ClientNetPeer;
+                        if(peer == null)
+                        {
+                            HECSDebug.Log($"The client;{c.GUID} does not have a peer");
+                            continue;
+                        }
+                        dataSender.SendCommand(peer, createCMD, DeliveryMethod.ReliableOrdered);
+                    }
                 }
+                else HECSDebug.LogWarning($"Replication data not found");
             }
         }
 

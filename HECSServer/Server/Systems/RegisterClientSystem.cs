@@ -68,6 +68,7 @@ namespace Systems
                 ConfigData = JsonConvert.SerializeObject(config.Data, Formatting.Indented)
             };
 
+            HECSDebug.Log($"Register new client:{client.GUID} on server");
             dataSenderSystem.SendCommand(command.Connect, 
                 new ClientConnectSuccessCommand { ServerData = serverData, Guid = client.GUID }, DeliveryMethod.ReliableOrdered);
 
