@@ -14,8 +14,9 @@ namespace Systems
     public class ServerNetworkSystem : BaseSystem, IServerNetworkSystem
     {
         private enum ServerNetworkSystemState { Default, Sync }
-        private string connectionRequestKey = "ClausUmbrella";
+        private string connectionRequestKey => config.Data.ServerPassword;
 
+        private ConfigComponent config;
         private ConnectionsHolderComponent connections;
         private DataSenderSystem dataSenderSystem;
         private IDataProcessor dataProcessor = new HECSDataProcessor();
@@ -34,6 +35,7 @@ namespace Systems
         public virtual void GlobalStart()
         {
             connections = Owner.World.GetSingleComponent<ConnectionsHolderComponent>();
+            config = Owner.World.GetSingleComponent<ConfigComponent>();
 
             for (int i = 0; i < lockedLists.Length; i++)
                 pullResolvers.TryAdd(i, new List<ResolverDataContainer>(256));
