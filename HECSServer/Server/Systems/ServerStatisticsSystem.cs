@@ -14,6 +14,7 @@ namespace Systems
     {
         private readonly ServerStatisticsInfo statistics = new ServerStatisticsInfo();
         private ConnectionsHolderComponent connections;
+        private NetworkClientHolderComponent networkClient;
         private DateTime lastUpdateTime;
 
         public Queue<string> Snapshots { get; } = new Queue<string>();
@@ -21,6 +22,7 @@ namespace Systems
         public override void InitSystem()
         {
             connections = EntityManager.GetSingleComponent<ConnectionsHolderComponent>();
+            networkClient = EntityManager.GetSingleComponent<NetworkClientHolderComponent>();
         }
 
         public void CommandGlobalReact(StatisticsCommand command)
@@ -70,10 +72,10 @@ namespace Systems
             if (connections.ClientConnectionsGUID.Count == 0) return;
 
             builder.AppendFormat("NetManager: Sent: {0} packets, {1:0.00}kb | Received: {2} packets, {3:0.00}kb{4}",
-                connections.NetManager.Statistics.PacketsSent,
-                connections.NetManager.Statistics.BytesSent/1024f,
-                connections.NetManager.Statistics.PacketsReceived, 
-                connections.NetManager.Statistics.BytesReceived/1024f,
+                networkClient.Manager.Statistics.PacketsSent,
+                networkClient.Manager.Statistics.BytesSent/1024f,
+                networkClient.Manager.Statistics.PacketsReceived,
+                networkClient.Manager.Statistics.BytesReceived/1024f,
                 Environment.NewLine);
 
             builder.AppendFormat("{0}{1}", GetQueuesData(), Environment.NewLine);
@@ -83,7 +85,7 @@ namespace Systems
             builder.AppendFormat("User info sent: {0}{1}", peersInfo, Environment.NewLine);
 
             foreach (var kvp in connections.ClientConnectionsGUID) kvp.Value.NetManager.Statistics.Reset();
-            connections.NetManager.Statistics.Reset();
+            networkClient.Manager.Statistics.Reset();
         }
 
         //todo тут изменеи

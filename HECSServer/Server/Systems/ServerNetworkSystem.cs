@@ -36,7 +36,7 @@ namespace Systems
         public virtual void GlobalStart()
         {
             connections = Owner.World.GetSingleComponent<ConnectionsHolderComponent>();
-            networkClient = Owner.AddHecsComponent(new NetworkClientHolderComponent());
+            networkClient = Owner.World.GetSingleComponent<NetworkClientHolderComponent>();
 
             config = Owner.World.GetSingleComponent<ConfigComponent>();
 
