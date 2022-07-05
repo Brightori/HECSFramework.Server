@@ -19,6 +19,7 @@ namespace Systems
         private ConfigComponent config;
         private ConnectionsHolderComponent connections;
         private DataSenderSystem dataSenderSystem;
+        private NetworkClientHolderComponent networkClient;
         private IDataProcessor dataProcessor = new HECSDataProcessor();
 
         private ConcurrentDictionary<int, List<ResolverDataContainer>> pullResolvers = new ConcurrentDictionary<int, List<ResolverDataContainer>>();
@@ -35,6 +36,8 @@ namespace Systems
         public virtual void GlobalStart()
         {
             connections = Owner.World.GetSingleComponent<ConnectionsHolderComponent>();
+            networkClient = Owner.AddHecsComponent(new NetworkClientHolderComponent());
+
             config = Owner.World.GetSingleComponent<ConfigComponent>();
 
             for (int i = 0; i < lockedLists.Length; i++)
@@ -105,7 +108,7 @@ namespace Systems
                 case ServerNetworkSystemState.Default:
                     break;
                 case ServerNetworkSystemState.Sync:
-                    connections.NetManager.PollEvents();
+                    networkClient.PollEvents();
                     break;
             }
 
