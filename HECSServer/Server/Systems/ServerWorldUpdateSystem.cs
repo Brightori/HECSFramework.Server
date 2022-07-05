@@ -93,8 +93,7 @@ namespace Systems
 
         public void LateStart()
         {
-            var t = new Thread(GameLoop);
-            t.Start();
+            new Thread(GameLoop).Start();
         }
     }
 }
