@@ -124,22 +124,18 @@ namespace Systems
 
             connections = EntityManager.GetSingleComponent<ConnectionsHolderComponent>();
             EventBasedNetListener listener = new EventBasedNetListener();
-            connections.NetManager = new NetManager(listener);
-            connections.NetManager.UpdateTime = Config.Instance.ServerTickMilliseconds;
-            connections.NetManager.DisconnectTimeout = 30000;
-            connections.NetManager.ChannelsCount = 64;
-            if (Config.Instance.ExtendedStatisticsEnabled)
-                connections.NetManager.EnableStatistics = true;
-            connections.NetManager.Start();
+
+            networkClient.StartServer(Config.Instance.ServerTickMilliseconds, 30000, 64, Config.Instance.ExtendedStatisticsEnabled);
+          
             
-            Owner.GetHECSComponent<ConnectionInfoComponent>().Port = connections.NetManager.LocalPort; 
+            Owner.GetHECSComponent<ConnectionInfoComponent>().Port = networkClient.Manager.LocalPort; 
 
             listener.NetworkReceiveEvent += Listener_NetworkReceiveEvent;
             listener.PeerConnectedEvent += ListenerOnPeerConnectedEvent;
             listener.PeerDisconnectedEvent += ListenerOnPeerDisconnectedEvent;
             listener.ConnectionRequestEvent += Listener_ConnectionRequestEvent;
 
-            connections.NetManager.UnsyncedEvents = true;
+            networkClient.Manager.UnsyncedEvents = true;
             state = ServerNetworkSystemState.Sync;
         }
 
