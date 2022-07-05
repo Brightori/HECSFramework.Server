@@ -73,7 +73,11 @@ namespace Systems
                             HECSDebug.Log($"Empty slot in client list");
                             continue;
                         }
-                        var peer = c.GetHECSComponent<ClientConnectionInfoComponent>()?.ClientNetPeer;
+
+                        //todo закэшировать и обращаться к полю
+                        var server = Owner.World.GetSingleComponent<RoomInfoComponent>().ServerWorld;
+                        var peer = server.GetSingleComponent<ConnectionsHolderComponent>().ClientConnectionsGUID[c.GUID];
+
                         if(peer == null)
                         {
                             HECSDebug.Log($"The client;{c.GUID} does not have a peer");

@@ -13,6 +13,7 @@ namespace HECSFramework.Server
         {
             return new List<IComponent>()
             {
+                new NetworkClientHolderComponent(),
                 new ConnectionsHolderComponent(),
                 new ServerTagComponent(),
                 new SyncEntitiesHolderComponent(),

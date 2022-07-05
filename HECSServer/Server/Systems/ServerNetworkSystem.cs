@@ -25,8 +25,6 @@ namespace Systems
         private ConcurrentDictionary<int, List<ResolverDataContainer>> pullResolvers = new ConcurrentDictionary<int, List<ResolverDataContainer>>();
         private bool[] lockedLists = new bool[64];
 
-        private ServerNetworkSystemState state;
-
         private int clientConnectCommandID = IndexGenerator.GetIndexForType(typeof(ClientConnectCommand));
 
         public override void InitSystem()
@@ -103,16 +101,10 @@ namespace Systems
 
         public void UpdateLocal()
         {
-            switch (state)
-            {
-                case ServerNetworkSystemState.Default:
-                    break;
-                case ServerNetworkSystemState.Sync:
-                    networkClient.PollEvents();
-                    break;
-            }
+            networkClient.PollEvents();
 
-            EntityManager.Command(new SyncComponentsCommand(), -1);
+            //todo разослать в рум миры.
+            Owner.World.Command(new SyncComponentsCommand());
         }
 
         public void CommandGlobalReact(InitNetworkSystemCommand command)
@@ -123,20 +115,16 @@ namespace Systems
             }
 
             connections = EntityManager.GetSingleComponent<ConnectionsHolderComponent>();
-            EventBasedNetListener listener = new EventBasedNetListener();
+
+            networkClient.Listener.NetworkReceiveEvent += Listener_NetworkReceiveEvent;
+            networkClient.Listener.PeerConnectedEvent += ListenerOnPeerConnectedEvent;
+            networkClient.Listener.PeerDisconnectedEvent += ListenerOnPeerDisconnectedEvent;
+            networkClient.Listener.ConnectionRequestEvent += Listener_ConnectionRequestEvent;
 
             networkClient.StartServer(Config.Instance.ServerTickMilliseconds, 30000, 64, Config.Instance.ExtendedStatisticsEnabled);
-          
-            
             Owner.GetHECSComponent<ConnectionInfoComponent>().Port = networkClient.Manager.LocalPort; 
-
-            listener.NetworkReceiveEvent += Listener_NetworkReceiveEvent;
-            listener.PeerConnectedEvent += ListenerOnPeerConnectedEvent;
-            listener.PeerDisconnectedEvent += ListenerOnPeerDisconnectedEvent;
-            listener.ConnectionRequestEvent += Listener_ConnectionRequestEvent;
-
+            
             networkClient.Manager.UnsyncedEvents = true;
-            state = ServerNetworkSystemState.Sync;
         }
 
         public void CommandGlobalReact(StopServerCommand command)
@@ -145,6 +133,15 @@ namespace Systems
             foreach (var kvp in EntityManager.GetSingleComponent<ConnectionsHolderComponent>().ClientConnectionsGUID)
                 kvp.Value.Disconnect();
             Environment.Exit(0);
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            networkClient.Listener.NetworkReceiveEvent -= Listener_NetworkReceiveEvent;
+            networkClient.Listener.PeerConnectedEvent -= ListenerOnPeerConnectedEvent;
+            networkClient.Listener.PeerDisconnectedEvent -= ListenerOnPeerDisconnectedEvent;
+            networkClient.Listener.ConnectionRequestEvent -= Listener_ConnectionRequestEvent;
         }
     }
 
