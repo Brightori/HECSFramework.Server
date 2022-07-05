@@ -8,15 +8,13 @@ namespace Components
     {
         private Config config;
         private long currentTick;
-      
 
         public TimeComponent() { }
-        public TimeComponent(Config config)
+        public void SetupConfig(Config config)
         {
             this.config = config;
             currentTick = Environment.TickCount64 / config.ServerTickMilliseconds;
         }
-
 
         /// <summary>Current tick</summary>
         public long TickCount => currentTick;
@@ -27,13 +25,8 @@ namespace Components
         /// <summary>Time to next tick</summary>
         public long TimeUntilTick => config.ServerTickMilliseconds - TimeAfterTick;
 
-
-
         public float DeltaTime => config.ServerTickMilliseconds / 1000f;
 
-
         public void NextTick() => currentTick++;
-
-        
     }
 }

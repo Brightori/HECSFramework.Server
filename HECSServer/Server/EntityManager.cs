@@ -16,7 +16,6 @@ namespace HECSFramework.Core
         public static World AddServerWorld(Config config,  params IEntityContainer[] entityContainers)
         {
             var newWorld = AddWorld(new ServerWorldContainer(), entityContainers);
-
             newWorld.Init();
 
             newWorld.GetSingleComponent<ConfigComponent>().Data = config;

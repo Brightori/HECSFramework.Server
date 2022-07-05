@@ -41,13 +41,11 @@ namespace HECSFramework.Server
             
            // HECSDebug.Init(new HECSDebugServerSide(dataSenderSys, true));
 
-            time = new TimeComponent(config);
 
             server.AddHecsComponent(new ServerTagComponent());
             server.AddHecsComponent(new SyncEntitiesHolderComponent());
             server.AddHecsComponent(new AppVersionComponent());
             server.AddHecsComponent(new ConfigComponent() { Data = config });
-            server.AddHecsComponent(time);
             
             
             //server.AddHecsSystem(new ServerNetworkSystem() { Port = port, Key = config.ServerPassword });
