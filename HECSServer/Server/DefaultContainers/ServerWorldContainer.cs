@@ -38,6 +38,7 @@ namespace HECSFramework.Server
                 new RegisterClientSystem(),
                 new AddOrRemoveNetworkComponentSystem(),
                 new ServerWorldUpdateSystem(),
+                new ServerWorldStartSystem(),
             };
         }
     }

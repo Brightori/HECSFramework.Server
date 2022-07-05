@@ -116,7 +116,7 @@ namespace Systems
         {
             if (!string.IsNullOrEmpty(command.Key))
             {
-                connectionRequestKey = command.Key;
+                config.Data.UpdatePassword(command.Key);
             }
 
             connections = EntityManager.GetSingleComponent<ConnectionsHolderComponent>();

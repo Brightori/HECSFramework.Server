@@ -62,6 +62,11 @@ namespace HECSFramework.Server
             return tree.ToString();
         }
 
+        public void UpdatePassword(string pass)
+        {
+            ServerPassword = pass;
+        }
+
         public static void SaveToFile()
         {
             File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "config.json"), JsonConvert.SerializeObject(Instance));
