@@ -90,22 +90,23 @@ namespace Systems
             }
         }
 
+        //Connecting a new player
         public void CommandGlobalReact(NewClientOnServerCommand command)
         {
             //Send a command to the new client to create all the entities that are in the world
-            foreach (ReplicationTagEntityComponent e in replicatedEntities)
+            foreach (ReplicationTagEntityComponent entity in replicatedEntities)
             {
 
-                var c = new CreateReplicationEntity()
+                var cmd = new CreateReplicationEntity()
                 {
-                    EntityID = e.ID,
-                    ContainerID = 0,
-                    Components = e.GetFullComponentsData()
+                    EntityID = entity.ID,
+                    ContainerID = entity.Owner.GetActorContainerID().ContainerIndex,
+                    Components = entity.GetFullComponentsData()
                 };
 
                 if(EntityManager.TryGetEntityByID(command.Client, out IEntity newClient))
                 {
-                    dataSender.SendCommand(newClient.GetHECSComponent<ClientConnectionInfoComponent>().ClientNetPeer, c, DeliveryMethod.ReliableOrdered);
+                    dataSender.SendCommand(newClient.GetHECSComponent<ClientConnectionInfoComponent>().ClientNetPeer, cmd, DeliveryMethod.ReliableOrdered);
                 }
                 else { HECSDebug.LogError($"Could not find connection information from the connected client"); }
             }
