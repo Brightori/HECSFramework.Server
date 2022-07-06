@@ -62,7 +62,7 @@ namespace Systems
                     var createCMD = new CreateReplicationEntity()
                     {
                         EntityID = replication.ID,
-                        ContainerID = 0,
+                        ContainerID = data.entity.GetActorContainerID().ContainerIndex,
                         Components = replication.GetFullComponentsData()
                     };
 
