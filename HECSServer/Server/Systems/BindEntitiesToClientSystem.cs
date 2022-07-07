@@ -104,7 +104,7 @@ namespace Systems
                     Components = entity.GetFullComponentsData()
                 };
 
-                if(EntityManager.TryGetEntityByID(command.Client, out IEntity newClient))
+                if(EntityManager.TryGetEntityByID(command.ClientGUID, out IEntity newClient))
                 {
                     dataSender.SendCommand(newClient.GetHECSComponent<ClientConnectionInfoComponent>().ClientNetPeer, cmd, DeliveryMethod.ReliableOrdered);
                 }

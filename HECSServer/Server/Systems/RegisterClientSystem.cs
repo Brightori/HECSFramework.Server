@@ -72,7 +72,7 @@ namespace Systems
             dataSenderSystem.SendCommand(command.Connect, 
                 new ClientConnectSuccessCommand { ServerData = serverData, Guid = client.GUID }, DeliveryMethod.ReliableOrdered);
 
-            EntityManager.Worlds.Data[command.RoomWorld].Command(new NewClientOnServerCommand { Client = client.GUID });
+            EntityManager.Worlds.Data[command.RoomWorld].Command(new NewClientOnServerCommand { ClientGUID = client.GUID });
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Components;
 using HECSFramework.Core;
+using System;
 
 namespace Systems
 {
@@ -8,7 +9,7 @@ namespace Systems
     {
         public void GlobalStart()
         {
-            Owner.GetHECSComponent<TimeComponent>().SetupConfig(Owner.GetHECSComponent<ConfigComponent>().Data);
+            Owner.GetHECSComponent<TimeComponent>().Start(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), Owner.GetHECSComponent<ConfigComponent>().Data.ServerTickMilliseconds);
         }
 
         public override void InitSystem()
